@@ -3,41 +3,71 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  background: #f6e9f7;
+}
+
+h1 {
+  text-align: center;
+  padding: 20px;
+  background: #e8d4f5;
+  margin: 0;
 }
 
 .container {
   display: flex;
-  gap: 30px;
+  gap: 40px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
 }
 
 section {
-  width: 100%;
+  flex: 1;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
 }
 
-input, select, textarea, button {
+input, select, textarea {
   width: 100%;
-  margin-top: 8px;
-  padding: 6px;
+  padding: 10px;
+  margin: 8px 0 15px;
+  border-radius: 8px;
+  border: 1px solid #e0c6f3;
+  background: #faf4ff;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #d8b4f8;
+  cursor: pointer;
 }
 
 table {
   width: 100%;
   margin-top: 15px;
   border-collapse: collapse;
+  background: #faf4ff;
 }
 
 th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 .invalid {
-  border: 1px solid red;
+  border: 2px solid red;
 }
 
 .error-text {
   color: red;
-  font-size: 12px;
+  font-size: 13px;
+  margin-top: -10px;
+  margin-bottom: 10px;
 }

@@ -105,22 +105,31 @@ function validate(dto) {
   let valid = true;
 
   if (!dto.title) {
-    showError("titleInput", "titleError");
+    showError("titleInput", "titleError", "Поле обов'язкове");
+    valid = false;
+  } else if (dto.title.length < 3) {
+    showError("titleInput", "titleError", "Мінімум 3 символи");
     valid = false;
   }
 
   if (!dto.category) {
-    showError("categorySelect", "categoryError");
+    showError("categorySelect", "categoryError", "Оберіть категорію");
     valid = false;
   }
 
   if (!dto.body) {
-    showError("bodyInput", "bodyError");
+    showError("bodyInput", "bodyError", "Поле обов'язкове");
+    valid = false;
+  } else if (dto.body.length < 5) {
+    showError("bodyInput", "bodyError", "Мінімум 5 символів");
     valid = false;
   }
 
   if (!dto.author) {
-    showError("authorInput", "authorError");
+    showError("authorInput", "authorError", "Поле обов'язкове");
+    valid = false;
+  } else if (dto.author.length < 3) {
+    showError("authorInput", "authorError", "Мінімум 3 символи");
     valid = false;
   }
 
@@ -129,9 +138,7 @@ function validate(dto) {
       posts[i].title.toLowerCase() === dto.title.toLowerCase() &&
       editingId === null
     ) {
-      showError("titleInput", "titleError");
-      document.getElementById("titleError").textContent =
-        "Запис з таким заголовком вже існує";
+      showError("titleInput", "titleError", "Такий заголовок вже існує");
       return false;
     }
   }
@@ -139,9 +146,9 @@ function validate(dto) {
   return valid;
 }
 
-function showError(inputId, errorId) {
+function showError(inputId, errorId, message) {
   document.getElementById(inputId).classList.add("invalid");
-  document.getElementById(errorId).textContent = "Поле обов'язкове";
+  document.getElementById(errorId).textContent = message;
 }
 
 function clearErrors() {
@@ -184,24 +191,25 @@ function render() {
 
   tableBody.innerHTML = "";
 
-  for (let i = 0; i < filtered.length; i++) {
-    const post = filtered[i];
+for (let i = 0; i < filtered.length; i++) {
+    let post = filtered[i];
 
-    tableBody.innerHTML +=
-      "<tr>" +
-      "<td>" + (i + 1) + "</td>" +
-      "<td>" + post.title + "</td>" +
-      "<td>" + post.category + "</td>" +
-      "<td>" + post.author + "</td>" +
-      "<td>" + post.body + "</td>" +
-      "<td>" + new Date(post.createdAt).toLocaleString() + "</td>" +
-      "<td>" +
-      "<button class='edit-btn' data-id='" + post.id + "'>Редагувати</button>" +
-      "<button class='delete-btn' data-id='" + post.id + "'>Видалити</button>" +
-      "</td>" +
-      "</tr>";
-  }
+    tableBody.innerHTML += 
+        "<tr>" +
+            "<td>" + (i + 1) + "</td>" +
+            "<td>" + post.title + "</td>" +
+            "<td>" + post.category + "</td>" +
+            "<td>" + post.author + "</td>" +
+            "<td>" + post.body + "</td>" +
+            "<td>" + new Date(post.createdAt).toLocaleString() + "</td>" +
+            "<td>" +
+                "<button class='edit-btn' data-id='" + post.id + "'>Редагувати</button>" +
+                "<button class='delete-btn' data-id='" + post.id + "'>Видалити</button>" +
+            "</td>" +
+        "</tr>";
 }
+
+}   
 
 function saveToStorage() {
   localStorage.setItem("posts", JSON.stringify(posts));
