@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import * as postService from "../services/post.service";
+import type {
+  CreatePostRequestDto,
+  UpdatePostRequestDto,
+} from "../dtos/posts.dto";
 
 export function getPosts(req: Request, res: Response, next: NextFunction) {
   try {
     const posts = postService.getPosts();
-
+    
     return res.status(200).json({
       items: posts,
       total: posts.length,
@@ -30,7 +34,11 @@ export function getPostById(
   }
 }
 
-export function createPost(req: Request, res: Response, next: NextFunction) {
+export function createPost(
+  req: Request<{}, {}, CreatePostRequestDto>,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const post = postService.createPost(req.body);
 
@@ -43,7 +51,7 @@ export function createPost(req: Request, res: Response, next: NextFunction) {
 }
 
 export function updatePost(
-  req: Request<{ id: string }>,
+  req: Request<{ id: string }, {}, UpdatePostRequestDto>,
   res: Response,
   next: NextFunction
 ) {

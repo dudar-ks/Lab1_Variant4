@@ -15,11 +15,7 @@ app.use(express.json());
 app.use(requestLoggingMiddleware);
 
 app.get("/health", (_req: Request, res: Response) => {
-  return res.status(200).json({
-    item: {
-      ok: true,
-    },
-  });
+  return res.status(200).json({ ok: true });
 });
 
 app.use("/api/users", usersRoutes);

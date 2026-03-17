@@ -3,6 +3,10 @@ export type ValidationError = {
   message: string;
 };
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export function validateCreateUserDto(body: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
 
@@ -19,16 +23,25 @@ export function validateCreateUserDto(body: unknown): ValidationError[] {
     });
   }
 
-  if (typeof dto.email !== "string" || dto.email.trim().length < 5) {
+  if (
+    typeof dto.email !== "string" ||
+    dto.email.trim().length < 5 ||
+    !isValidEmail(dto.email.trim())
+  ) {
     errors.push({
       field: "email",
-      message: "Email must be a non-empty string with at least 5 characters",
+      message: "Email must be a valid email address",
     });
   }
 
   return errors;
 }
-export function validatePost(body: unknown): ValidationError[] {
+
+export function validateUpdateUserDto(body: unknown): ValidationError[] {
+  return validateCreateUserDto(body);
+}
+
+export function validateCreatePostDto(body: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
 
   if (!body || typeof body !== "object") {
@@ -68,7 +81,11 @@ export function validatePost(body: unknown): ValidationError[] {
   return errors;
 }
 
-export function validateComment(body: unknown): ValidationError[] {
+export function validateUpdatePostDto(body: unknown): ValidationError[] {
+  return validateCreatePostDto(body);
+}
+
+export function validateCreateCommentDto(body: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
 
   if (!body || typeof body !== "object") {
@@ -100,8 +117,9 @@ export function validateComment(body: unknown): ValidationError[] {
 
   return errors;
 }
-export function validateUpdateUserDto(body: unknown): ValidationError[] {
-  return validateCreateUserDto(body);
+
+export function validateUpdateCommentDto(body: unknown): ValidationError[] {
+  return validateCreateCommentDto(body);
 }
 
 export function validatePatchUserDto(body: unknown): ValidationError[] {
@@ -123,10 +141,14 @@ export function validatePatchUserDto(body: unknown): ValidationError[] {
   }
 
   if ("email" in dto) {
-    if (typeof dto.email !== "string" || dto.email.trim().length < 5) {
+    if (
+      typeof dto.email !== "string" ||
+      dto.email.trim().length < 5 ||
+      !isValidEmail(dto.email.trim())
+    ) {
       errors.push({
         field: "email",
-        message: "Email must be a non-empty string with at least 5 characters",
+        message: "Email must be a valid email address",
       });
     }
   }

@@ -1,14 +1,13 @@
-import { posts } from "../repositories/posts.repository.js";
-import ApiError from "../errors/ApiError.js";
-import { validatePost } from "../utils/validators.js";
-import { toPostResponseDto } from "../utils/mappers.js";
-
-import type { Post } from "../types/post.types.js";
+import { posts } from "../repositories/posts.repository";
+import ApiError from "../errors/ApiError";
+import { validateCreatePostDto, validateUpdatePostDto } from "../utils/validators";
+import { toPostResponseDto } from "../utils/mappers";
+import type { Post } from "../types/post.types";
 import type {
   CreatePostRequestDto,
   UpdatePostRequestDto,
-  PostResponseDto
-} from "../dtos/posts.dto.js";
+  PostResponseDto,
+} from "../dtos/posts.dto";
 
 export function getPosts(): PostResponseDto[] {
   return posts.map(toPostResponseDto);
@@ -26,7 +25,7 @@ export function getPostById(id: string): PostResponseDto {
 
 export function createPost(body: unknown): PostResponseDto {
   const dto = body as CreatePostRequestDto;
-  const errors = validatePost(dto);
+ const errors = validateCreatePostDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
@@ -54,7 +53,7 @@ export function updatePost(id: string, body: unknown): PostResponseDto {
   }
 
   const dto = body as UpdatePostRequestDto;
-  const errors = validatePost(dto);
+ const errors = validateUpdatePostDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);

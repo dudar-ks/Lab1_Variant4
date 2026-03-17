@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import * as commentService from "../services/comment.service";
+import type {
+  CreateCommentRequestDto,
+  UpdateCommentRequestDto,
+} from "../dtos/comments.dto";
 
 export function getComments(req: Request, res: Response, next: NextFunction) {
   try {
     const comments = commentService.getComments();
-
+    
     return res.status(200).json({
       items: comments,
       total: comments.length,
@@ -30,7 +34,11 @@ export function getCommentById(
   }
 }
 
-export function createComment(req: Request, res: Response, next: NextFunction) {
+export function createComment(
+  req: Request<{}, {}, CreateCommentRequestDto>,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const comment = commentService.createComment(req.body);
 
@@ -43,7 +51,7 @@ export function createComment(req: Request, res: Response, next: NextFunction) {
 }
 
 export function updateComment(
-  req: Request<{ id: string }>,
+  req: Request<{ id: string }, {}, UpdateCommentRequestDto>,
   res: Response,
   next: NextFunction
 ) {

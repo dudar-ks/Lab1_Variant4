@@ -1,14 +1,16 @@
-import { comments } from "../repositories/comments.repository.js";
-import ApiError from "../errors/ApiError.js";
-import { validateComment } from "../utils/validators.js";
-import { toCommentResponseDto } from "../utils/mappers.js";
-
-import type { CommentEntity } from "../types/comment.types.js";
+import { comments } from "../repositories/comments.repository";
+import ApiError from "../errors/ApiError";
+import {
+  validateCreateCommentDto,
+  validateUpdateCommentDto,
+} from "../utils/validators";
+import { toCommentResponseDto } from "../utils/mappers";
+import type { CommentEntity } from "../types/comment.types";
 import type {
   CreateCommentRequestDto,
   UpdateCommentRequestDto,
-  CommentResponseDto
-} from "../dtos/comments.dto.js";
+  CommentResponseDto,
+} from "../dtos/comments.dto";
 
 export function getComments(): CommentResponseDto[] {
   return comments.map(toCommentResponseDto);
@@ -26,7 +28,7 @@ export function getCommentById(id: string): CommentResponseDto {
 
 export function createComment(body: unknown): CommentResponseDto {
   const dto = body as CreateCommentRequestDto;
-  const errors = validateComment(dto);
+ const errors = validateCreateCommentDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
@@ -52,7 +54,7 @@ export function updateComment(id: string, body: unknown): CommentResponseDto {
   }
 
   const dto = body as UpdateCommentRequestDto;
-  const errors = validateComment(dto);
+ const errors = validateUpdateCommentDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
