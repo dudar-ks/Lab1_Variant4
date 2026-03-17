@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import * as postService from "../services/post.service.js";
+import * as postService from "../services/post.service";
 
 export function getPosts(req: Request, res: Response, next: NextFunction) {
   try {
     const posts = postService.getPosts();
-    res.status(200).json(posts);
+
+    return res.status(200).json({
+      items: posts,
+      total: posts.length,
+    });
   } catch (error) {
     next(error);
   }
@@ -17,7 +21,10 @@ export function getPostById(
 ) {
   try {
     const post = postService.getPostById(req.params.id);
-    res.status(200).json(post);
+
+    return res.status(200).json({
+      item: post,
+    });
   } catch (error) {
     next(error);
   }
@@ -26,7 +33,10 @@ export function getPostById(
 export function createPost(req: Request, res: Response, next: NextFunction) {
   try {
     const post = postService.createPost(req.body);
-    res.status(201).json(post);
+
+    return res.status(201).json({
+      item: post,
+    });
   } catch (error) {
     next(error);
   }
@@ -39,7 +49,10 @@ export function updatePost(
 ) {
   try {
     const post = postService.updatePost(req.params.id, req.body);
-    res.status(200).json(post);
+
+    return res.status(200).json({
+      item: post,
+    });
   } catch (error) {
     next(error);
   }
@@ -52,7 +65,8 @@ export function deletePost(
 ) {
   try {
     postService.deletePost(req.params.id);
-    res.status(204).send();
+
+    return res.status(204).send();
   } catch (error) {
     next(error);
   }

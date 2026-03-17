@@ -1,34 +1,84 @@
-import express, { Request, Response } from "express";
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Лабораторна робота №1 – Варіант 4</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-import usersRoutes from "./routes/users.routes";
-import postsRoutes from "./routes/posts.routes";
-import commentsRoutes from "./routes/comments.routes";
+<h1>Posts</h1>
 
-import { requestLoggingMiddleware } from "./middleware/request-logging.middleware";
-import { notFoundMiddleware } from "./middleware/not-found.middleware";
-import { errorHandlerMiddleware } from "./middleware/error-handler.middleware";
+<div class="container">
 
-const app = express();
-const PORT = 3000;
+  <section>
+    <h2>Додати запис</h2>
 
-app.use(express.json());
-app.use(requestLoggingMiddleware);
+    <form id="postsForm">
 
-app.get("/health", (_req: Request, res: Response) => {
-  return res.status(200).json({
-    item: {
-      ok: true,
-    },
-  });
-});
+      <label for="titleInput">Заголовок</label>
+      <input type="text" id="titleInput">
+      <div id="titleError" class="error-text"></div>
 
-app.use("/api/users", usersRoutes);
-app.use("/api/posts", postsRoutes);
-app.use("/api/comments", commentsRoutes);
+      <label for="categorySelect">Категорія</label>
+      <select id="categorySelect">
+        <option value="">Оберіть категорію</option>
+        <option value="Новина">Новина</option>
+        <option value="Стаття">Стаття</option>
+        <option value="Оголошення">Оголошення</option>
+      </select>
+      <div id="categoryError" class="error-text"></div>
 
-app.use(notFoundMiddleware);
-app.use(errorHandlerMiddleware);
+      <label for="bodyInput">Текст</label>
+      <textarea id="bodyInput"></textarea>
+      <div id="bodyError" class="error-text"></div>
 
-app.listen(PORT, () => {
-  console.log(`API started on http://localhost:${PORT}`);
-});
+      <label for="authorInput">Автор</label>
+      <input type="text" id="authorInput">
+      <div id="authorError" class="error-text"></div>
+
+      <button type="submit">Додати</button>
+      <button type="button" id="resetBtn">Скасувати</button>
+
+    </form>
+  </section>
+
+  <section>
+    <h2>Список записів</h2>
+
+    <input type="text" id="searchInput" placeholder="Пошук за заголовком">
+
+    <select id="filterSelect">
+      <option value="">Усі категорії</option>
+      <option value="Новина">Новина</option>
+      <option value="Стаття">Стаття</option>
+      <option value="Оголошення">Оголошення</option>
+    </select>
+
+    <select id="sortSelect">
+      <option value="new">Спочатку нові</option>
+      <option value="old">Спочатку старі</option>
+    </select>
+
+    <table>
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Заголовок</th>
+          <th>Категорія</th>
+          <th>Автор</th>
+          <th>Текст</th>
+          <th>Дата</th>
+          <th>Дії</th>
+        </tr>
+      </thead>
+      <tbody id="itemsTableBody"></tbody>
+    </table>
+
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

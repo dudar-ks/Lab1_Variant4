@@ -1,11 +1,16 @@
 import { users } from "../repositories/users.repository";
-import { toUserResponseDto } from "../dtos/users.dto";
-import ApiError from "../errors/ApiError";
-import type {
-  CreateUserRequestDto,
-  UpdateUserRequestDto,
-  PatchUserRequestDto,
+import {
+  toUserResponseDto,
+  type CreateUserRequestDto,
+  type UpdateUserRequestDto,
+  type PatchUserRequestDto,
 } from "../dtos/users.dto";
+import ApiError from "../errors/ApiError";
+import {
+  validateCreateUserDto,
+  validateUpdateUserDto,
+  validatePatchUserDto,
+} from "../utils/validators";
 
 type GetUsersOptions = {
   name?: string;
@@ -19,17 +24,17 @@ type GetUsersOptions = {
 export function getUsers(options: GetUsersOptions = {}) {
   let result = [...users];
 
- if (options.name) {
-  result = result.filter((u) =>
-    u.name.toLowerCase().includes(options.name!.toLowerCase())
-  );
-}
+  if (options.name) {
+    result = result.filter((u) =>
+      u.name.toLowerCase().includes(options.name!.toLowerCase())
+    );
+  }
 
-if (options.email) {
-  result = result.filter((u) =>
-    u.email.toLowerCase().includes(options.email!.toLowerCase())
-  );
-}
+  if (options.email) {
+    result = result.filter((u) =>
+      u.email.toLowerCase().includes(options.email!.toLowerCase())
+    );
+  }
 
   if (options.sortBy) {
     result.sort((a, b) => {
@@ -67,11 +72,17 @@ export function getUserById(id: string) {
   return toUserResponseDto(user);
 }
 
-export function createUser(body: CreateUserRequestDto) {
+export function createUser(dto: CreateUserRequestDto) {
+  const errors = validateCreateUserDto(dto);
+
+  if (errors.length > 0) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
+  }
+
   const newUser = {
     id: Date.now().toString(),
-    name: body.name,
-    email: body.email,
+    name: dto.name,
+    email: dto.email,
   };
 
   users.push(newUser);
@@ -80,6 +91,12 @@ export function createUser(body: CreateUserRequestDto) {
 }
 
 export function updateUser(id: string, body: UpdateUserRequestDto) {
+  const errors = validateUpdateUserDto(body);
+
+  if (errors.length > 0) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
+  }
+
   const user = users.find((u) => u.id === id);
 
   if (!user) {
@@ -93,6 +110,12 @@ export function updateUser(id: string, body: UpdateUserRequestDto) {
 }
 
 export function patchUser(id: string, body: PatchUserRequestDto) {
+  const errors = validatePatchUserDto(body);
+
+  if (errors.length > 0) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
+  }
+
   const user = users.find((u) => u.id === id);
 
   if (!user) {

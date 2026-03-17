@@ -6,34 +6,28 @@
 
 API побудовано за архітектурою з розділенням на **шари**:
 
-* routes — прийом HTTP запитів
-* controllers — обробка HTTP
-* services — бізнес-логіка
-* repositories — доступ до даних
-* dtos — типи запитів та відповідей
-* middleware — логування та обробка помилок
+- routes — прийом HTTP запитів
+- controllers — обробка HTTP
+- services — бізнес-логіка
+- repositories — доступ до даних
+- dtos — типи запитів та відповідей
+- middleware — логування та обробка помилок
 
 ---
 
 # 1. Як запустити проект
 
-### 1. Встановити залежності
+### Встановити залежності
 
 ```bash
 npm install
 ```
-
-### 2. Запустити сервер у режимі розробки
-
+### Запустити сервер у режимі розробки
 ```bash
 npm run dev
 ```
-
-### 3. Сервер буде доступний за адресою
-
-```
+### Сервер буде доступний за адресою
 http://localhost:3000
-```
 
 ### Перевірка роботи сервера
 
@@ -120,6 +114,13 @@ curl -X PUT http://localhost:3000/api/users/1 \
 -H "Content-Type: application/json" \
 -d '{"name":"Oksana Dudar","email":"oksana@gmail.com"}'
 ```
+### Часткове оновлення користувача
+
+```bash
+curl -X PATCH http://localhost:3000/api/users/1 \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"Oksana Updated\"}"
+```
 
 ### Видалити користувача
 
@@ -204,3 +205,36 @@ curl -X DELETE http://localhost:3000/api/comments/1
 ```
 
 ---
+
+# 4. Додаткові можливості для Users
+
+### Підтримуються query params:
+
+- `name` — фільтрація за ім’ям
+- `email` — фільтрація за email
+- `sortBy=name|email` — поле для сортування
+- `sortDir=asc|desc` — напрям сортування
+- `page` — номер сторінки
+- `pageSize` — кількість елементів на сторінці
+
+---
+
+### Фільтрація
+
+```bash
+curl "http://localhost:3000/api/users?name=oks"
+```
+
+### Сортування і пагінація 
+```bash
+curl "http://localhost:3000/api/users?page=1&pageSize=5&sortBy=name&sortDir=asc"
+```
+
+# 5. Коди стану
+
+- 200 — успішний запит
+- 201 — створено ресурс
+- 204 — успішно, без тіла відповіді
+- 400 — помилка валідації
+- 404 — не знайдено
+- 500 — внутрішня помилка сервера

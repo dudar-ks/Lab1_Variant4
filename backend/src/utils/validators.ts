@@ -1,60 +1,69 @@
-import type {
-  CreateUserRequestDto,
-  UpdateUserRequestDto,
-  PatchUserRequestDto
-} from "../dtos/users.dto";
+export type ValidationError = {
+  field: string;
+  message: string;
+};
 
-import type { ValidationDetail } from "../errors/ApiError";
+export function validateCreateUserDto(body: unknown): ValidationError[] {
+  const errors: ValidationError[] = [];
 
-function isValidEmail(email: string): boolean {
-  return email.includes("@");
-}
+  if (!body || typeof body !== "object") {
+    return [{ field: "body", message: "Request body must be an object" }];
+  }
 
-export function validateUser(
-  dto: CreateUserRequestDto | UpdateUserRequestDto
-): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
+  const dto = body as Record<string, unknown>;
 
-  if (!dto.name || dto.name.trim().length < 2) {
+  if (typeof dto.name !== "string" || dto.name.trim().length < 2) {
     errors.push({
       field: "name",
-      message: "Name must be at least 2 characters long"
+      message: "Name must be a non-empty string with at least 2 characters",
     });
   }
 
-  if (!dto.email || !isValidEmail(dto.email)) {
+  if (typeof dto.email !== "string" || dto.email.trim().length < 5) {
     errors.push({
       field: "email",
-      message: "Email must be valid"
+      message: "Email must be a non-empty string with at least 5 characters",
     });
   }
 
   return errors;
 }
 
-export function validateUserPatch(
-  dto: PatchUserRequestDto
-): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
+export function validateUpdateUserDto(body: unknown): ValidationError[] {
+  return validateCreateUserDto(body);
+}
 
-  if (dto.name !== undefined && dto.name.trim().length < 2) {
-    errors.push({
-      field: "name",
-      message: "Name must be at least 2 characters long"
-    });
+export function validatePatchUserDto(body: unknown): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (!body || typeof body !== "object") {
+    return [{ field: "body", message: "Request body must be an object" }];
   }
 
-  if (dto.email !== undefined && !isValidEmail(dto.email)) {
-    errors.push({
-      field: "email",
-      message: "Email must be valid"
-    });
+  const dto = body as Record<string, unknown>;
+
+  if ("name" in dto) {
+    if (typeof dto.name !== "string" || dto.name.trim().length < 2) {
+      errors.push({
+        field: "name",
+        message: "Name must be a non-empty string with at least 2 characters",
+      });
+    }
   }
 
-  if (dto.name === undefined && dto.email === undefined) {
+  if ("email" in dto) {
+    if (typeof dto.email !== "string" || dto.email.trim().length < 5) {
+      errors.push({
+        field: "email",
+        message: "Email must be a non-empty string with at least 5 characters",
+      });
+    }
+  }
+
+  if (!("name" in dto) && !("email" in dto)) {
     errors.push({
       field: "body",
-      message: "At least one field must be provided"
+      message: "At least one field must be provided",
     });
   }
 

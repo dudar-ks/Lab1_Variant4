@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import * as commentService from "../services/comment.service.js";
+import * as commentService from "../services/comment.service";
 
 export function getComments(req: Request, res: Response, next: NextFunction) {
   try {
     const comments = commentService.getComments();
-    res.status(200).json(comments);
+
+    return res.status(200).json({
+      items: comments,
+      total: comments.length,
+    });
   } catch (error) {
     next(error);
   }
@@ -17,7 +21,10 @@ export function getCommentById(
 ) {
   try {
     const comment = commentService.getCommentById(req.params.id);
-    res.status(200).json(comment);
+
+    return res.status(200).json({
+      item: comment,
+    });
   } catch (error) {
     next(error);
   }
@@ -26,7 +33,10 @@ export function getCommentById(
 export function createComment(req: Request, res: Response, next: NextFunction) {
   try {
     const comment = commentService.createComment(req.body);
-    res.status(201).json(comment);
+
+    return res.status(201).json({
+      item: comment,
+    });
   } catch (error) {
     next(error);
   }
@@ -39,7 +49,10 @@ export function updateComment(
 ) {
   try {
     const comment = commentService.updateComment(req.params.id, req.body);
-    res.status(200).json(comment);
+
+    return res.status(200).json({
+      item: comment,
+    });
   } catch (error) {
     next(error);
   }
@@ -52,7 +65,8 @@ export function deleteComment(
 ) {
   try {
     commentService.deleteComment(req.params.id);
-    res.status(204).send();
+
+    return res.status(204).send();
   } catch (error) {
     next(error);
   }

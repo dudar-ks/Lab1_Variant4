@@ -27,7 +27,10 @@ export function getUsers(req: Request, res: Response, next: NextFunction) {
           : undefined,
     });
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      items: result.items,
+      total: result.total,
+    });
   } catch (error) {
     next(error);
   }
