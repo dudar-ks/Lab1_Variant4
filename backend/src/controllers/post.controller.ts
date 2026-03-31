@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as postService from "../services/post.service";
+import ApiError from "../errors/ApiError";
 import type {
   CreatePostRequestDto,
   UpdatePostRequestDto,
@@ -7,11 +8,11 @@ import type {
 
 export function getPosts(req: Request, res: Response, next: NextFunction) {
   try {
-    const posts = postService.getPosts();
-    
+    const result = postService.getPosts();
+
     return res.status(200).json({
-      items: posts,
-      total: posts.length,
+      items: result.items,
+      total: result.total,
     });
   } catch (error) {
     next(error);
@@ -24,7 +25,15 @@ export function getPostById(
   next: NextFunction
 ) {
   try {
-    const post = postService.getPostById(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const post = postService.getPostById(id);
 
     return res.status(200).json({
       item: post,
@@ -56,7 +65,15 @@ export function updatePost(
   next: NextFunction
 ) {
   try {
-    const post = postService.updatePost(req.params.id, req.body);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const post = postService.updatePost(id, req.body);
 
     return res.status(200).json({
       item: post,
@@ -72,7 +89,15 @@ export function deletePost(
   next: NextFunction
 ) {
   try {
-    postService.deletePost(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    postService.deletePost(id);
 
     return res.status(204).send();
   } catch (error) {

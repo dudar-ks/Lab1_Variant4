@@ -12,7 +12,7 @@ export function errorHandlerMiddleware(
       error: {
         code: err.code,
         message: err.message,
-        details: err.details,
+        details: err.details ?? [],
       },
     });
   }

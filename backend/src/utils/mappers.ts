@@ -1,10 +1,9 @@
-import { User } from "../types/user.types.js";
-import { Post } from "../types/post.types.js";
-import { CommentEntity } from "../types/comment.types.js";
-
-import { UserResponseDto } from "../dtos/users.dto.js";
-import { PostResponseDto } from "../dtos/posts.dto.js";
-import { CommentResponseDto } from "../dtos/comments.dto.js";
+import type { User } from "../types/user.types";
+import type { Post } from "../types/post.types";
+import type { CommentEntity } from "../types/comment.types";
+import type { UserResponseDto } from "../dtos/users.dto";
+import type { PostResponseDto } from "../dtos/posts.dto";
+import type { CommentResponseDto } from "../dtos/comments.dto";
 
 export function toUserResponseDto(user: User): UserResponseDto {
   return {
@@ -25,7 +24,9 @@ export function toPostResponseDto(post: Post): PostResponseDto {
   };
 }
 
-export function toCommentResponseDto(comment: CommentEntity): CommentResponseDto {
+export function toCommentResponseDto(
+  comment: CommentEntity
+): CommentResponseDto {
   return {
     id: comment.id,
     text: comment.text,

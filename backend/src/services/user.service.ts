@@ -1,16 +1,17 @@
 import { users } from "../repositories/users.repository";
-import {
-  toUserResponseDto,
-  type CreateUserRequestDto,
-  type UpdateUserRequestDto,
-  type PatchUserRequestDto,
-} from "../dtos/users.dto";
 import ApiError from "../errors/ApiError";
+import { toUserResponseDto } from "../utils/mappers";
 import {
   validateCreateUserDto,
-  validateUpdateUserDto,
   validatePatchUserDto,
+  validateUpdateUserDto,
 } from "../utils/validators";
+import type {
+  CreateUserRequestDto,
+  PatchUserRequestDto,
+  UpdateUserRequestDto,
+} from "../dtos/users.dto";
+import type { User } from "../types/user.types";
 
 type GetUsersOptions = {
   name?: string;
@@ -21,35 +22,50 @@ type GetUsersOptions = {
   pageSize?: number;
 };
 
+function getNextUserId(): number {
+  if (users.length === 0) {
+    return 1;
+  }
+
+  return Math.max(...users.map((user) => user.id)) + 1;
+}
+
 export function getUsers(options: GetUsersOptions = {}) {
   let result = [...users];
 
   if (options.name) {
-    result = result.filter((u) =>
-      u.name.toLowerCase().includes(options.name!.toLowerCase())
+    result = result.filter((user) =>
+      user.name.toLowerCase().includes(options.name!.toLowerCase())
     );
   }
 
   if (options.email) {
-    result = result.filter((u) =>
-      u.email.toLowerCase().includes(options.email!.toLowerCase())
+    result = result.filter((user) =>
+      user.email.toLowerCase().includes(options.email!.toLowerCase())
     );
   }
 
   if (options.sortBy) {
     result.sort((a, b) => {
-      const valueA = a[options.sortBy!];
-      const valueB = b[options.sortBy!];
+      const valueA = a[options.sortBy!].toLowerCase();
+      const valueB = b[options.sortBy!].toLowerCase();
 
-      if (valueA > valueB) return options.sortDir === "desc" ? -1 : 1;
-      if (valueA < valueB) return options.sortDir === "desc" ? 1 : -1;
+      if (valueA > valueB) {
+        return options.sortDir === "desc" ? -1 : 1;
+      }
+
+      if (valueA < valueB) {
+        return options.sortDir === "desc" ? 1 : -1;
+      }
+
       return 0;
     });
   }
 
   const total = result.length;
-  const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? total;
+  const page = options.page && options.page > 0 ? options.page : 1;
+  const pageSize =
+    options.pageSize && options.pageSize > 0 ? options.pageSize : total || 10;
 
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
@@ -62,8 +78,8 @@ export function getUsers(options: GetUsersOptions = {}) {
   };
 }
 
-export function getUserById(id: string) {
-  const user = users.find((u) => u.id === id);
+export function getUserById(id: number) {
+  const user = users.find((item) => item.id === id);
 
   if (!user) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
@@ -79,10 +95,10 @@ export function createUser(dto: CreateUserRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const newUser = {
-    id: Date.now().toString(),
-    name: dto.name,
-    email: dto.email,
+  const newUser: User = {
+    id: getNextUserId(),
+    name: dto.name.trim(),
+    email: dto.email.trim(),
   };
 
   users.push(newUser);
@@ -90,51 +106,51 @@ export function createUser(dto: CreateUserRequestDto) {
   return toUserResponseDto(newUser);
 }
 
-export function updateUser(id: string, body: UpdateUserRequestDto) {
-  const errors = validateUpdateUserDto(body);
+export function updateUser(id: number, dto: UpdateUserRequestDto) {
+  const errors = validateUpdateUserDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const user = users.find((u) => u.id === id);
+  const user = users.find((item) => item.id === id);
 
   if (!user) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
   }
 
-  user.name = body.name;
-  user.email = body.email;
+  user.name = dto.name.trim();
+  user.email = dto.email.trim();
 
   return toUserResponseDto(user);
 }
 
-export function patchUser(id: string, body: PatchUserRequestDto) {
-  const errors = validatePatchUserDto(body);
+export function patchUser(id: number, dto: PatchUserRequestDto) {
+  const errors = validatePatchUserDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const user = users.find((u) => u.id === id);
+  const user = users.find((item) => item.id === id);
 
   if (!user) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
   }
 
-  if (body.name !== undefined) {
-    user.name = body.name;
+  if (dto.name !== undefined) {
+    user.name = dto.name.trim();
   }
 
-  if (body.email !== undefined) {
-    user.email = body.email;
+  if (dto.email !== undefined) {
+    user.email = dto.email.trim();
   }
 
   return toUserResponseDto(user);
 }
 
-export function deleteUser(id: string) {
-  const index = users.findIndex((u) => u.id === id);
+export function deleteUser(id: number) {
+  const index = users.findIndex((item) => item.id === id);
 
   if (index === -1) {
     throw new ApiError(404, "NOT_FOUND", "User not found");

@@ -1,18 +1,18 @@
 export type CreateCommentRequestDto = {
   text: string;
-  postId: string;
-  userId: string;
+  postId: number;
+  userId: number;
 };
 
 export type UpdateCommentRequestDto = {
   text: string;
-  postId: string;
-  userId: string;
+  postId: number;
+  userId: number;
 };
 
 export type CommentResponseDto = {
-  id: string;
+  id: number;
   text: string;
-  postId: string;
-  userId: string;
+  postId: number;
+  userId: number;
 };

@@ -1,6 +1,6 @@
 export type CommentEntity = {
-  id: string;
+  id: number;
   text: string;
-  postId: string;
-  userId: string;
+  postId: number;
+  userId: number;
 };

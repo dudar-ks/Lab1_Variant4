@@ -13,18 +13,8 @@ export type PatchUserRequestDto = {
   email?: string;
 };
 
-import type { User } from "../types/user.types";
-
 export type UserResponseDto = {
-  id: string;
+  id: number;
   name: string;
   email: string;
 };
-
-export function toUserResponseDto(user: User): UserResponseDto {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-  };
-}

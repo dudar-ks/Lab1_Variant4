@@ -1,13 +1,21 @@
 import { NextFunction, Request, Response } from "express";
 import * as userService from "../services/user.service";
+import ApiError from "../errors/ApiError";
 import type {
   CreateUserRequestDto,
-  UpdateUserRequestDto,
   PatchUserRequestDto,
+  UpdateUserRequestDto,
 } from "../dtos/users.dto";
 
 export function getUsers(req: Request, res: Response, next: NextFunction) {
   try {
+    const page =
+      typeof req.query.page === "string" ? Number(req.query.page) : undefined;
+    const pageSize =
+      typeof req.query.pageSize === "string"
+        ? Number(req.query.pageSize)
+        : undefined;
+
     const result = userService.getUsers({
       name: typeof req.query.name === "string" ? req.query.name : undefined,
       email: typeof req.query.email === "string" ? req.query.email : undefined,
@@ -19,11 +27,10 @@ export function getUsers(req: Request, res: Response, next: NextFunction) {
         req.query.sortDir === "asc" || req.query.sortDir === "desc"
           ? req.query.sortDir
           : undefined,
-      page:
-        typeof req.query.page === "string" ? Number(req.query.page) : undefined,
+      page: page !== undefined && !Number.isNaN(page) ? page : undefined,
       pageSize:
-        typeof req.query.pageSize === "string"
-          ? Number(req.query.pageSize)
+        pageSize !== undefined && !Number.isNaN(pageSize)
+          ? pageSize
           : undefined,
     });
 
@@ -42,7 +49,15 @@ export function getUserById(
   next: NextFunction
 ) {
   try {
-    const user = userService.getUserById(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const user = userService.getUserById(id);
 
     return res.status(200).json({
       item: user,
@@ -74,7 +89,15 @@ export function updateUser(
   next: NextFunction
 ) {
   try {
-    const user = userService.updateUser(req.params.id, req.body);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const user = userService.updateUser(id, req.body);
 
     return res.status(200).json({
       item: user,
@@ -90,7 +113,15 @@ export function patchUser(
   next: NextFunction
 ) {
   try {
-    const user = userService.patchUser(req.params.id, req.body);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const user = userService.patchUser(id, req.body);
 
     return res.status(200).json({
       item: user,
@@ -106,7 +137,15 @@ export function deleteUser(
   next: NextFunction
 ) {
   try {
-    userService.deleteUser(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    userService.deleteUser(id);
 
     return res.status(204).send();
   } catch (error) {

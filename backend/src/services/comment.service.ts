@@ -1,23 +1,33 @@
 import { comments } from "../repositories/comments.repository";
 import ApiError from "../errors/ApiError";
+import { toCommentResponseDto } from "../utils/mappers";
 import {
   validateCreateCommentDto,
   validateUpdateCommentDto,
 } from "../utils/validators";
-import { toCommentResponseDto } from "../utils/mappers";
-import type { CommentEntity } from "../types/comment.types";
 import type {
   CreateCommentRequestDto,
   UpdateCommentRequestDto,
-  CommentResponseDto,
 } from "../dtos/comments.dto";
+import type { CommentEntity } from "../types/comment.types";
 
-export function getComments(): CommentResponseDto[] {
-  return comments.map(toCommentResponseDto);
+function getNextCommentId(): number {
+  if (comments.length === 0) {
+    return 1;
+  }
+
+  return Math.max(...comments.map((comment) => comment.id)) + 1;
 }
 
-export function getCommentById(id: string): CommentResponseDto {
-  const comment = comments.find((c) => c.id === id);
+export function getComments() {
+  return {
+    items: comments.map(toCommentResponseDto),
+    total: comments.length,
+  };
+}
+
+export function getCommentById(id: number) {
+  const comment = comments.find((item) => item.id === id);
 
   if (!comment) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
@@ -26,49 +36,47 @@ export function getCommentById(id: string): CommentResponseDto {
   return toCommentResponseDto(comment);
 }
 
-export function createComment(body: unknown): CommentResponseDto {
-  const dto = body as CreateCommentRequestDto;
- const errors = validateCreateCommentDto(dto);
+export function createComment(dto: CreateCommentRequestDto) {
+  const errors = validateCreateCommentDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const comment: CommentEntity = {
-    id: (Date.now() + 1).toString(),
-    text: dto.text,
+  const newComment: CommentEntity = {
+    id: getNextCommentId(),
+    text: dto.text.trim(),
     postId: dto.postId,
-    userId: dto.userId
+    userId: dto.userId,
   };
 
-  comments.push(comment);
+  comments.push(newComment);
 
-  return toCommentResponseDto(comment);
+  return toCommentResponseDto(newComment);
 }
 
-export function updateComment(id: string, body: unknown): CommentResponseDto {
-  const comment = comments.find((c) => c.id === id);
+export function updateComment(id: number, dto: UpdateCommentRequestDto) {
+  const comment = comments.find((item) => item.id === id);
 
   if (!comment) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
   }
 
-  const dto = body as UpdateCommentRequestDto;
- const errors = validateUpdateCommentDto(dto);
+  const errors = validateUpdateCommentDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  comment.text = dto.text;
+  comment.text = dto.text.trim();
   comment.postId = dto.postId;
   comment.userId = dto.userId;
 
   return toCommentResponseDto(comment);
 }
 
-export function deleteComment(id: string): void {
-  const index = comments.findIndex((c) => c.id === id);
+export function deleteComment(id: number) {
+  const index = comments.findIndex((item) => item.id === id);
 
   if (index === -1) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");

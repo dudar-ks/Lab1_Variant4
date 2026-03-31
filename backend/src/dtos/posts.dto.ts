@@ -13,7 +13,7 @@ export type UpdatePostRequestDto = {
 };
 
 export type PostResponseDto = {
-  id: string;
+  id: number;
   title: string;
   category: string;
   body: string;

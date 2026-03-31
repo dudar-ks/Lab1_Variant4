@@ -1,20 +1,33 @@
 import { posts } from "../repositories/posts.repository";
 import ApiError from "../errors/ApiError";
-import { validateCreatePostDto, validateUpdatePostDto } from "../utils/validators";
 import { toPostResponseDto } from "../utils/mappers";
-import type { Post } from "../types/post.types";
+import {
+  validateCreatePostDto,
+  validateUpdatePostDto,
+} from "../utils/validators";
 import type {
   CreatePostRequestDto,
   UpdatePostRequestDto,
-  PostResponseDto,
 } from "../dtos/posts.dto";
+import type { Post } from "../types/post.types";
 
-export function getPosts(): PostResponseDto[] {
-  return posts.map(toPostResponseDto);
+function getNextPostId(): number {
+  if (posts.length === 0) {
+    return 1;
+  }
+
+  return Math.max(...posts.map((post) => post.id)) + 1;
 }
 
-export function getPostById(id: string): PostResponseDto {
-  const post = posts.find((p) => p.id === id);
+export function getPosts() {
+  return {
+    items: posts.map(toPostResponseDto),
+    total: posts.length,
+  };
+}
+
+export function getPostById(id: number) {
+  const post = posts.find((item) => item.id === id);
 
   if (!post) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
@@ -23,52 +36,50 @@ export function getPostById(id: string): PostResponseDto {
   return toPostResponseDto(post);
 }
 
-export function createPost(body: unknown): PostResponseDto {
-  const dto = body as CreatePostRequestDto;
- const errors = validateCreatePostDto(dto);
+export function createPost(dto: CreatePostRequestDto) {
+  const errors = validateCreatePostDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const post: Post = {
-    id: Date.now().toString(),
-    title: dto.title,
-    category: dto.category,
-    body: dto.body,
-    author: dto.author,
-    createdAt: new Date().toISOString()
+  const newPost: Post = {
+    id: getNextPostId(),
+    title: dto.title.trim(),
+    category: dto.category.trim(),
+    body: dto.body.trim(),
+    author: dto.author.trim(),
+    createdAt: new Date().toISOString(),
   };
 
-  posts.push(post);
+  posts.push(newPost);
 
-  return toPostResponseDto(post);
+  return toPostResponseDto(newPost);
 }
 
-export function updatePost(id: string, body: unknown): PostResponseDto {
-  const post = posts.find((p) => p.id === id);
+export function updatePost(id: number, dto: UpdatePostRequestDto) {
+  const post = posts.find((item) => item.id === id);
 
   if (!post) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
   }
 
-  const dto = body as UpdatePostRequestDto;
- const errors = validateUpdatePostDto(dto);
+  const errors = validateUpdatePostDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  post.title = dto.title;
-  post.category = dto.category;
-  post.body = dto.body;
-  post.author = dto.author;
+  post.title = dto.title.trim();
+  post.category = dto.category.trim();
+  post.body = dto.body.trim();
+  post.author = dto.author.trim();
 
   return toPostResponseDto(post);
 }
 
-export function deletePost(id: string): void {
-  const index = posts.findIndex((p) => p.id === id);
+export function deletePost(id: number) {
+  const index = posts.findIndex((item) => item.id === id);
 
   if (index === -1) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");

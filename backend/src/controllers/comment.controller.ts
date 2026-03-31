@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as commentService from "../services/comment.service";
+import ApiError from "../errors/ApiError";
 import type {
   CreateCommentRequestDto,
   UpdateCommentRequestDto,
@@ -7,11 +8,11 @@ import type {
 
 export function getComments(req: Request, res: Response, next: NextFunction) {
   try {
-    const comments = commentService.getComments();
-    
+    const result = commentService.getComments();
+
     return res.status(200).json({
-      items: comments,
-      total: comments.length,
+      items: result.items,
+      total: result.total,
     });
   } catch (error) {
     next(error);
@@ -24,7 +25,15 @@ export function getCommentById(
   next: NextFunction
 ) {
   try {
-    const comment = commentService.getCommentById(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const comment = commentService.getCommentById(id);
 
     return res.status(200).json({
       item: comment,
@@ -56,7 +65,15 @@ export function updateComment(
   next: NextFunction
 ) {
   try {
-    const comment = commentService.updateComment(req.params.id, req.body);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const comment = commentService.updateComment(id, req.body);
 
     return res.status(200).json({
       item: comment,
@@ -72,7 +89,15 @@ export function deleteComment(
   next: NextFunction
 ) {
   try {
-    commentService.deleteComment(req.params.id);
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    commentService.deleteComment(id);
 
     return res.status(204).send();
   } catch (error) {

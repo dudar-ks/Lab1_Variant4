@@ -1,3 +1,3 @@
-import { User } from "../types/user.types.js";
+import type { User } from "../types/user.types";
 
 export const users: User[] = [];
