@@ -7,6 +7,7 @@ import commentsRoutes from "./routes/comments.routes";
 import { requestLoggingMiddleware } from "./middleware/request-logging.middleware";
 import { notFoundMiddleware } from "./middleware/not-found.middleware";
 import { errorHandlerMiddleware } from "./middleware/error-handler.middleware";
+import { initDb } from "./db/initDb";
 
 const app = express();
 const PORT = 3000;
@@ -25,6 +26,17 @@ app.use("/api/comments", commentsRoutes);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`API started on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    await initDb();
+
+    app.listen(PORT, () => {
+      console.log(`API started on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start application:", error);
+    process.exit(1);
+  }
+}
+
+start();

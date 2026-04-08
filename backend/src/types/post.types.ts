@@ -4,5 +4,6 @@ export type Post = {
   category: string;
   body: string;
   author: string;
+  userId: number;
   createdAt: string;
 };

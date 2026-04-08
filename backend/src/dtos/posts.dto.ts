@@ -3,6 +3,7 @@ export type CreatePostRequestDto = {
   category: string;
   body: string;
   author: string;
+  userId: number;
 };
 
 export type UpdatePostRequestDto = {
@@ -10,6 +11,7 @@ export type UpdatePostRequestDto = {
   category: string;
   body: string;
   author: string;
+  userId: number;
 };
 
 export type PostResponseDto = {
@@ -18,5 +20,6 @@ export type PostResponseDto = {
   category: string;
   body: string;
   author: string;
+  userId: number;
   createdAt: string;
 };

@@ -1,4 +1,3 @@
-import { posts } from "../repositories/posts.repository";
 import ApiError from "../errors/ApiError";
 import { toPostResponseDto } from "../utils/mappers";
 import {
@@ -9,25 +8,19 @@ import type {
   CreatePostRequestDto,
   UpdatePostRequestDto,
 } from "../dtos/posts.dto";
-import type { Post } from "../types/post.types";
+import * as postsRepository from "../repositories/posts.repository";
 
-function getNextPostId(): number {
-  if (posts.length === 0) {
-    return 1;
-  }
+export async function getPosts() {
+  const posts = await postsRepository.getPosts();
 
-  return Math.max(...posts.map((post) => post.id)) + 1;
-}
-
-export function getPosts() {
   return {
     items: posts.map(toPostResponseDto),
     total: posts.length,
   };
 }
 
-export function getPostById(id: number) {
-  const post = posts.find((item) => item.id === id);
+export async function getPostById(id: number) {
+  const post = await postsRepository.getPostById(id);
 
   if (!post) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
@@ -36,31 +29,28 @@ export function getPostById(id: number) {
   return toPostResponseDto(post);
 }
 
-export function createPost(dto: CreatePostRequestDto) {
+export async function createPost(dto: CreatePostRequestDto) {
   const errors = validateCreatePostDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const newPost: Post = {
-    id: getNextPostId(),
-    title: dto.title.trim(),
-    category: dto.category.trim(),
-    body: dto.body.trim(),
-    author: dto.author.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  const createdPost = await postsRepository.createPost(
+    dto.title.trim(),
+    dto.category.trim(),
+    dto.body.trim(),
+    dto.author.trim(),
+    Number(dto.userId)
+  );
 
-  posts.push(newPost);
-
-  return toPostResponseDto(newPost);
+  return toPostResponseDto(createdPost);
 }
 
-export function updatePost(id: number, dto: UpdatePostRequestDto) {
-  const post = posts.find((item) => item.id === id);
+export async function updatePost(id: number, dto: UpdatePostRequestDto) {
+  const existingPost = await postsRepository.getPostById(id);
 
-  if (!post) {
+  if (!existingPost) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
   }
 
@@ -70,20 +60,23 @@ export function updatePost(id: number, dto: UpdatePostRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  post.title = dto.title.trim();
-  post.category = dto.category.trim();
-  post.body = dto.body.trim();
-  post.author = dto.author.trim();
-
-  return toPostResponseDto(post);
+  throw new ApiError(
+    501,
+    "NOT_IMPLEMENTED",
+    "Update for posts is not implemented yet for SQLite version"
+  );
 }
 
-export function deletePost(id: number) {
-  const index = posts.findIndex((item) => item.id === id);
+export async function deletePost(id: number) {
+  const existingPost = await postsRepository.getPostById(id);
 
-  if (index === -1) {
+  if (!existingPost) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
   }
 
-  posts.splice(index, 1);
+  throw new ApiError(
+    501,
+    "NOT_IMPLEMENTED",
+    "Delete for posts is not implemented yet for SQLite version"
+  );
 }

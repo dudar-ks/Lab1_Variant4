@@ -7,7 +7,11 @@ import type {
   UpdateUserRequestDto,
 } from "../dtos/users.dto";
 
-export function getUsers(req: Request, res: Response, next: NextFunction) {
+export async function getUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const page =
       typeof req.query.page === "string" ? Number(req.query.page) : undefined;
@@ -16,7 +20,7 @@ export function getUsers(req: Request, res: Response, next: NextFunction) {
         ? Number(req.query.pageSize)
         : undefined;
 
-    const result = userService.getUsers({
+    const result = await userService.getUsers({
       name: typeof req.query.name === "string" ? req.query.name : undefined,
       email: typeof req.query.email === "string" ? req.query.email : undefined,
       sortBy:
@@ -43,7 +47,7 @@ export function getUsers(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export function getUserById(
+export async function getUserById(
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
@@ -57,7 +61,7 @@ export function getUserById(
       ]);
     }
 
-    const user = userService.getUserById(id);
+    const user = await userService.getUserById(id);
 
     return res.status(200).json({
       item: user,
@@ -67,13 +71,13 @@ export function getUserById(
   }
 }
 
-export function createUser(
+export async function createUser(
   req: Request<{}, {}, CreateUserRequestDto>,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const user = userService.createUser(req.body);
+    const user = await userService.createUser(req.body);
 
     return res.status(201).json({
       item: user,
@@ -83,7 +87,7 @@ export function createUser(
   }
 }
 
-export function updateUser(
+export async function updateUser(
   req: Request<{ id: string }, {}, UpdateUserRequestDto>,
   res: Response,
   next: NextFunction
@@ -97,7 +101,7 @@ export function updateUser(
       ]);
     }
 
-    const user = userService.updateUser(id, req.body);
+    const user = await userService.updateUser(id, req.body);
 
     return res.status(200).json({
       item: user,
@@ -107,7 +111,7 @@ export function updateUser(
   }
 }
 
-export function patchUser(
+export async function patchUser(
   req: Request<{ id: string }, {}, PatchUserRequestDto>,
   res: Response,
   next: NextFunction
@@ -121,7 +125,7 @@ export function patchUser(
       ]);
     }
 
-    const user = userService.patchUser(id, req.body);
+    const user = await userService.patchUser(id, req.body);
 
     return res.status(200).json({
       item: user,
@@ -131,7 +135,7 @@ export function patchUser(
   }
 }
 
-export function deleteUser(
+export async function deleteUser(
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
@@ -145,7 +149,7 @@ export function deleteUser(
       ]);
     }
 
-    userService.deleteUser(id);
+    await userService.deleteUser(id);
 
     return res.status(204).send();
   } catch (error) {

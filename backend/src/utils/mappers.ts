@@ -1,5 +1,4 @@
 import type { User } from "../types/user.types";
-import type { Post } from "../types/post.types";
 import type { CommentEntity } from "../types/comment.types";
 import type { UserResponseDto } from "../dtos/users.dto";
 import type { PostResponseDto } from "../dtos/posts.dto";
@@ -13,17 +12,25 @@ export function toUserResponseDto(user: User): UserResponseDto {
   };
 }
 
-export function toPostResponseDto(post: Post): PostResponseDto {
+export function toPostResponseDto(post: {
+  id: number;
+  title: string;
+  category: string;
+  body: string;
+  author: string;
+  userId: number;
+  createdAt: string;
+}) {
   return {
     id: post.id,
     title: post.title,
     category: post.category,
     body: post.body,
     author: post.author,
+    userId: post.userId,
     createdAt: post.createdAt,
   };
 }
-
 export function toCommentResponseDto(
   comment: CommentEntity
 ): CommentResponseDto {

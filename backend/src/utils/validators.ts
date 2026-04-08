@@ -129,6 +129,13 @@ export function validateCreatePostDto(body: unknown): ValidationDetail[] {
     });
   }
 
+  if (typeof body.userId !== "number" || Number.isNaN(body.userId)) {
+    errors.push({
+      field: "userId",
+      message: "UserId must be a valid number",
+    });
+  }
+
   return errors;
 }
 

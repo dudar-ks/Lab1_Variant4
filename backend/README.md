@@ -1,240 +1,104 @@
-# LR2 REST API (TypeScript)
+Супер 💙 зроблю тобі готовий README, який можна просто вставити і здати.
 
-Це REST API, написаний на **Node.js** з використанням **Express** та **TypeScript**.
+📄 Готовий README.md
 
-Дані зберігаються тільки в оперативній пам’яті (**in-memory repository**). База даних не використовується.
+Скопіюй і встав у файл:
 
-API побудовано за архітектурою з розділенням на **шари**:
+backend/README.md
+# REST API з використанням SQLite
 
-- routes — прийом HTTP запитів
-- controllers — обробка HTTP
-- services — бізнес-логіка
-- repositories — доступ до даних
-- dtos — типи запитів та відповідей
-- middleware — логування та обробка помилок
+## Опис
+
+У цій лабораторній роботі було розширено бекенд застосунку шляхом додавання збереження даних у SQLite.  
+Реалізовано роботу з базою даних без використання ORM.
 
 ---
 
-# 1. Як запустити проект
+## Як запустити проєкт
 
-### Встановити залежності
-
+1. Перейти в папку backend:
 ```bash
+cd backend
+Встановити залежності:
 npm install
-```
-### Запустити сервер у режимі розробки
-```bash
+Запустити сервер:
 npm run dev
-```
-### Сервер буде доступний за адресою
+
+Сервер буде доступний за адресою:
+
 http://localhost:3000
+База даних
 
-### Перевірка роботи сервера
+Файл бази даних створюється автоматично при запуску:
 
-```bash
-curl http://localhost:3000/health
-```
+./data/app.db
 
-Очікувана відповідь:
+Файл не зберігається в репозиторії.
 
-```json
+Схема бази даних
+
+Таблиця Users
+id (PRIMARY KEY)
+name (TEXT, NOT NULL)
+email (TEXT, NOT NULL, UNIQUE)
+
+Таблиця Posts
+id (PRIMARY KEY)
+title (TEXT, NOT NULL)
+category (TEXT, NOT NULL)
+body (TEXT, NOT NULL)
+author (TEXT, NOT NULL)
+userId (INTEGER, FOREIGN KEY → Users.id)
+createdAt (TEXT, NOT NULL)
+
+Таблиця Comments
+id (PRIMARY KEY)
+text (TEXT, NOT NULL)
+postId (INTEGER, FOREIGN KEY → Posts.id)
+userId (INTEGER, FOREIGN KEY → Users.id)
+
+Зв’язки
+Один користувач → багато постів (1:N)
+Один пост → багато коментарів (1:N)
+
+Використовується FOREIGN KEY з підтримкою цілісності даних.
+
+Приклади запитів
+Створити користувача
+POST /api/users
 {
-  "ok": true
+  "name": "Oksana",
+  "email": "oksana@example.com"
 }
-```
+Створити пост
+POST /api/posts
+{
+  "title": "My first post",
+  "category": "study",
+  "body": "Hello SQLite",
+  "author": "Oksana",
+  "userId": 1
+}
+Отримати всі пости
+GET /api/posts
+Отримати пост за id
+GET /api/posts/1
+Приклад SQL-запиту (WHERE + ORDER + LIMIT)
+SELECT * FROM posts
+WHERE category = 'study'
+ORDER BY createdAt DESC
+LIMIT 5;
 
----
+Обробка помилок
+201 — успішне створення
+400 — помилка валідації
+404 — ресурс не знайдено
+500 — внутрішня помилка сервера
 
-# 2. Реалізовані сутності
-
-У проекті реалізовано три сутності.
-
-## 1. Users
-
-Поля:
-
-* id
-* name
-* email
-
----
-
-## 2. Posts
-
-Поля:
-
-* id
-* title
-* category
-* body
-* author
-* createdAt
-
----
-
-## 3. Comments
-
-Поля:
-
-* id
-* text
-* postId
-* userId
-
----
-
-# 3. Приклади запитів (curl)
-
-## Users
-
-### Отримати всіх користувачів
-
-```bash
-curl http://localhost:3000/api/users
-```
-
-### Отримати користувача за id
-
-```bash
-curl http://localhost:3000/api/users/1
-```
-
-### Створити користувача
-
-```bash
-curl -X POST http://localhost:3000/api/users \
--H "Content-Type: application/json" \
--d '{"name":"Oksana","email":"oksana@gmail.com"}'
-```
-
-### Оновити користувача
-
-```bash
-curl -X PUT http://localhost:3000/api/users/1 \
--H "Content-Type: application/json" \
--d '{"name":"Oksana Dudar","email":"oksana@gmail.com"}'
-```
-### Часткове оновлення користувача
-
-```bash
-curl -X PATCH http://localhost:3000/api/users/1 \
--H "Content-Type: application/json" \
--d "{\"name\":\"Oksana Updated\"}"
-```
-
-### Видалити користувача
-
-```bash
-curl -X DELETE http://localhost:3000/api/users/1
-```
-
----
-
-# Posts
-
-### Отримати всі пости
-
-```bash
-curl http://localhost:3000/api/posts
-```
-
-### Отримати пост за id
-
-```bash
-curl http://localhost:3000/api/posts/1
-```
-
-### Створити пост
-
-```bash
-curl -X POST http://localhost:3000/api/posts \
--H "Content-Type: application/json" \
--d '{"title":"First post","category":"news","body":"Hello world","author":"Oksana"}'
-```
-
-### Оновити пост
-
-```bash
-curl -X PUT http://localhost:3000/api/posts/1 \
--H "Content-Type: application/json" \
--d '{"title":"Updated post","category":"news","body":"Updated text","author":"Oksana"}'
-```
-
-### Видалити пост
-
-```bash
-curl -X DELETE http://localhost:3000/api/posts/1
-```
-
----
-
-# Comments
-
-### Отримати всі коментарі
-
-```bash
-curl http://localhost:3000/api/comments
-```
-
-### Отримати коментар за id
-
-```bash
-curl http://localhost:3000/api/comments/1
-```
-
-### Створити коментар
-
-```bash
-curl -X POST http://localhost:3000/api/comments \
--H "Content-Type: application/json" \
--d '{"text":"Nice post","postId":"1","userId":"1"}'
-```
-
-### Оновити коментар
-
-```bash
-curl -X PUT http://localhost:3000/api/comments/1 \
--H "Content-Type: application/json" \
--d '{"text":"Updated comment","postId":"1","userId":"1"}'
-```
-
-### Видалити коментар
-
-```bash
-curl -X DELETE http://localhost:3000/api/comments/1
-```
-
----
-
-# 4. Додаткові можливості для Users
-
-### Підтримуються query params:
-
-- `name` — фільтрація за ім’ям
-- `email` — фільтрація за email
-- `sortBy=name|email` — поле для сортування
-- `sortDir=asc|desc` — напрям сортування
-- `page` — номер сторінки
-- `pageSize` — кількість елементів на сторінці
-
----
-
-### Фільтрація
-
-```bash
-curl "http://localhost:3000/api/users?name=oks"
-```
-
-### Сортування і пагінація 
-```bash
-curl "http://localhost:3000/api/users?page=1&pageSize=5&sortBy=name&sortDir=asc"
-```
-
-# 5. Коди стану
-
-- 200 — успішний запит
-- 201 — створено ресурс
-- 204 — успішно, без тіла відповіді
-- 400 — помилка валідації
-- 404 — не знайдено
-- 500 — внутрішня помилка сервера
+  Що реалізовано
+Підключення SQLite до Node.js
+Ініціалізація бази даних при старті
+CRUD для сутностей Users і Posts
+Зв’язки між таблицями через FOREIGN KEY
+Валідація вхідних даних
+Обробка помилок через middleware
