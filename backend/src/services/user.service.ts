@@ -2,71 +2,28 @@ import ApiError from "../errors/ApiError";
 import { toUserResponseDto } from "../utils/mappers";
 import {
   validateCreateUserDto,
-  validatePatchUserDto,
   validateUpdateUserDto,
 } from "../utils/validators";
 import type {
   CreateUserRequestDto,
-  PatchUserRequestDto,
   UpdateUserRequestDto,
 } from "../dtos/users.dto";
 import * as usersRepository from "../repositories/users.repository";
 
 type GetUsersOptions = {
-  name?: string;
   email?: string;
-  sortBy?: "name" | "email";
-  sortDir?: "asc" | "desc";
-  page?: number;
-  pageSize?: number;
+  sort?: string;
+  order?: string;
 };
 
 export async function getUsers(options: GetUsersOptions = {}) {
-  let users = await usersRepository.getUsers();
+  const users = await usersRepository.getUsers({
+    email: options.email,
+    sort: options.sort,
+    order: options.order,
+  });
 
-  if (options.name) {
-    users = users.filter((user) =>
-      String(user.name).toLowerCase().includes(options.name!.toLowerCase())
-    );
-  }
-
-  if (options.email) {
-    users = users.filter((user) =>
-      String(user.email).toLowerCase().includes(options.email!.toLowerCase())
-    );
-  }
-
-  if (options.sortBy) {
-    users.sort((a, b) => {
-      const valueA = String(a[options.sortBy!]).toLowerCase();
-      const valueB = String(b[options.sortBy!]).toLowerCase();
-
-      if (valueA > valueB) {
-        return options.sortDir === "desc" ? -1 : 1;
-      }
-
-      if (valueA < valueB) {
-        return options.sortDir === "desc" ? 1 : -1;
-      }
-
-      return 0;
-    });
-  }
-
-  const total = users.length;
-  const page = options.page && options.page > 0 ? options.page : 1;
-  const pageSize =
-    options.pageSize && options.pageSize > 0 ? options.pageSize : total || 10;
-
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-
-  const items = users.slice(start, end).map(toUserResponseDto);
-
-  return {
-    items,
-    total,
-  };
+  return users.map(toUserResponseDto);
 }
 
 export async function getUserById(id: number) {
@@ -86,12 +43,24 @@ export async function createUser(dto: CreateUserRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const createdUser = await usersRepository.createUser(
-    dto.name.trim(),
-    dto.email.trim()
-  );
+  try {
+    const createdUser = await usersRepository.createUser(
+      dto.name.trim(),
+      dto.email.trim()
+    );
 
-  return toUserResponseDto(createdUser);
+    return toUserResponseDto(createdUser);
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (message.includes("UNIQUE constraint failed")) {
+      throw new ApiError(409, "CONFLICT", "Email already exists", [
+        { field: "email", message: "Email already exists" },
+      ]);
+    }
+
+    throw error;
+  }
 }
 
 export async function updateUser(id: number, dto: UpdateUserRequestDto) {
@@ -107,31 +76,29 @@ export async function updateUser(id: number, dto: UpdateUserRequestDto) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
   }
 
-  throw new ApiError(
-    501,
-    "NOT_IMPLEMENTED",
-    "Update for users is not implemented yet for SQLite version"
-  );
-}
+  try {
+    const updatedUser = await usersRepository.updateUser(
+      id,
+      dto.name.trim(),
+      dto.email.trim()
+    );
 
-export async function patchUser(id: number, dto: PatchUserRequestDto) {
-  const errors = validatePatchUserDto(dto);
+    if (!updatedUser) {
+      throw new ApiError(404, "NOT_FOUND", "User not found");
+    }
 
-  if (errors.length > 0) {
-    throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
+    return toUserResponseDto(updatedUser);
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (message.includes("UNIQUE constraint failed")) {
+      throw new ApiError(409, "CONFLICT", "Email already exists", [
+        { field: "email", message: "Email already exists" },
+      ]);
+    }
+
+    throw error;
   }
-
-  const existingUser = await usersRepository.getUserById(id);
-
-  if (!existingUser) {
-    throw new ApiError(404, "NOT_FOUND", "User not found");
-  }
-
-  throw new ApiError(
-    501,
-    "NOT_IMPLEMENTED",
-    "Patch for users is not implemented yet for SQLite version"
-  );
 }
 
 export async function deleteUser(id: number) {
@@ -141,9 +108,25 @@ export async function deleteUser(id: number) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
   }
 
-  throw new ApiError(
-    501,
-    "NOT_IMPLEMENTED",
-    "Delete for users is not implemented yet for SQLite version"
-  );
+  try {
+    const deleted = await usersRepository.deleteUser(id);
+
+    if (!deleted) {
+      throw new ApiError(404, "NOT_FOUND", "User not found");
+    }
+
+    return;
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (message.includes("FOREIGN KEY constraint failed")) {
+      throw new ApiError(
+        409,
+        "CONFLICT",
+        "User cannot be deleted because related records exist"
+      );
+    }
+
+    throw error;
+  }
 }

@@ -6,9 +6,27 @@ import type {
   UpdateCommentRequestDto,
 } from "../dtos/comments.dto";
 
-export function getComments(req: Request, res: Response, next: NextFunction) {
+export async function getComments(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
-    const result = commentService.getComments();
+    const postId =
+      typeof req.query.postId === "string" ? Number(req.query.postId) : undefined;
+
+    const userId =
+      typeof req.query.userId === "string" ? Number(req.query.userId) : undefined;
+
+    const result = await commentService.getComments({
+      postId: postId !== undefined && !Number.isNaN(postId) ? postId : undefined,
+      userId: userId !== undefined && !Number.isNaN(userId) ? userId : undefined,
+      sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
+      order:
+        req.query.order === "asc" || req.query.order === "desc"
+          ? req.query.order
+          : undefined,
+    });
 
     return res.status(200).json({
       items: result.items,
@@ -19,7 +37,7 @@ export function getComments(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export function getCommentById(
+export async function getCommentById(
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
@@ -28,12 +46,15 @@ export function getCommentById(
     const id = Number(req.params.id);
 
     if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Comment id must be a valid number",
+        [{ field: "id", message: "Id must be a valid number" }]
+      );
     }
 
-    const comment = commentService.getCommentById(id);
+    const comment = await commentService.getCommentById(id);
 
     return res.status(200).json({
       item: comment,
@@ -43,13 +64,13 @@ export function getCommentById(
   }
 }
 
-export function createComment(
+export async function createComment(
   req: Request<{}, {}, CreateCommentRequestDto>,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const comment = commentService.createComment(req.body);
+    const comment = await commentService.createComment(req.body);
 
     return res.status(201).json({
       item: comment,
@@ -59,7 +80,7 @@ export function createComment(
   }
 }
 
-export function updateComment(
+export async function updateComment(
   req: Request<{ id: string }, {}, UpdateCommentRequestDto>,
   res: Response,
   next: NextFunction
@@ -68,12 +89,15 @@ export function updateComment(
     const id = Number(req.params.id);
 
     if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Comment id must be a valid number",
+        [{ field: "id", message: "Id must be a valid number" }]
+      );
     }
 
-    const comment = commentService.updateComment(id, req.body);
+    const comment = await commentService.updateComment(id, req.body);
 
     return res.status(200).json({
       item: comment,
@@ -83,7 +107,7 @@ export function updateComment(
   }
 }
 
-export function deleteComment(
+export async function deleteComment(
   req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
@@ -92,14 +116,44 @@ export function deleteComment(
     const id = Number(req.params.id);
 
     if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Comment id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Comment id must be a valid number",
+        [{ field: "id", message: "Id must be a valid number" }]
+      );
     }
 
-    commentService.deleteComment(id);
+    await commentService.deleteComment(id);
 
     return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getCommentsWithUsers(
+  req: Request<{ postId: string }>,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const postId = Number(req.params.postId);
+
+    if (Number.isNaN(postId)) {
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Post id must be a valid number",
+        [{ field: "postId", message: "Post id must be a valid number" }]
+      );
+    }
+
+    const items = await commentService.getCommentsWithUsers(postId);
+
+    return res.status(200).json({
+      items,
+    });
   } catch (error) {
     next(error);
   }

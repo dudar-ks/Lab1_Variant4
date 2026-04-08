@@ -10,8 +10,20 @@ import type {
 } from "../dtos/posts.dto";
 import * as postsRepository from "../repositories/posts.repository";
 
-export async function getPosts() {
-  const posts = await postsRepository.getPosts();
+type GetPostsOptions = {
+  userId?: number;
+  category?: string;
+  sort?: string;
+  order?: string;
+};
+
+export async function getPosts(options: GetPostsOptions = {}) {
+  const posts = await postsRepository.getPosts({
+    userId: options.userId,
+    category: options.category,
+    sort: options.sort,
+    order: options.order,
+  });
 
   return {
     items: posts.map(toPostResponseDto),
@@ -36,15 +48,31 @@ export async function createPost(dto: CreatePostRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const createdPost = await postsRepository.createPost(
-    dto.title.trim(),
-    dto.category.trim(),
-    dto.body.trim(),
-    dto.author.trim(),
-    Number(dto.userId)
-  );
+  try {
+    const createdPost = await postsRepository.createPost(
+      dto.title.trim(),
+      dto.category.trim(),
+      dto.body.trim(),
+      dto.author.trim(),
+      Number(dto.userId)
+    );
 
-  return toPostResponseDto(createdPost);
+    return toPostResponseDto(createdPost);
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (message.includes("FOREIGN KEY constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid userId", [
+        { field: "userId", message: "Referenced user does not exist" },
+      ]);
+    }
+
+    if (message.includes("NOT NULL constraint failed") || message.includes("CHECK constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body");
+    }
+
+    throw error;
+  }
 }
 
 export async function updatePost(id: number, dto: UpdatePostRequestDto) {
@@ -60,11 +88,36 @@ export async function updatePost(id: number, dto: UpdatePostRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  throw new ApiError(
-    501,
-    "NOT_IMPLEMENTED",
-    "Update for posts is not implemented yet for SQLite version"
-  );
+  try {
+    const updatedPost = await postsRepository.updatePost(
+      id,
+      dto.title.trim(),
+      dto.category.trim(),
+      dto.body.trim(),
+      dto.author.trim(),
+      Number(dto.userId)
+    );
+
+    if (!updatedPost) {
+      throw new ApiError(404, "NOT_FOUND", "Post not found");
+    }
+
+    return toPostResponseDto(updatedPost);
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (message.includes("FOREIGN KEY constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid userId", [
+        { field: "userId", message: "Referenced user does not exist" },
+      ]);
+    }
+
+    if (message.includes("NOT NULL constraint failed") || message.includes("CHECK constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body");
+    }
+
+    throw error;
+  }
 }
 
 export async function deletePost(id: number) {
@@ -74,9 +127,21 @@ export async function deletePost(id: number) {
     throw new ApiError(404, "NOT_FOUND", "Post not found");
   }
 
-  throw new ApiError(
-    501,
-    "NOT_IMPLEMENTED",
-    "Delete for posts is not implemented yet for SQLite version"
-  );
+  const deleted = await postsRepository.deletePost(id);
+
+  if (!deleted) {
+    throw new ApiError(404, "NOT_FOUND", "Post not found");
+  }
+
+  return;
+}
+
+export async function getPostWithAuthor(id: number) {
+  const post = await postsRepository.getPostWithAuthor(id);
+
+  if (!post) {
+    throw new ApiError(404, "NOT_FOUND", "Post not found");
+  }
+
+  return post;
 }

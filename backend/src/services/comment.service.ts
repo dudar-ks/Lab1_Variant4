@@ -1,4 +1,3 @@
-import { comments } from "../repositories/comments.repository";
 import ApiError from "../errors/ApiError";
 import { toCommentResponseDto } from "../utils/mappers";
 import {
@@ -9,25 +8,31 @@ import type {
   CreateCommentRequestDto,
   UpdateCommentRequestDto,
 } from "../dtos/comments.dto";
-import type { CommentEntity } from "../types/comment.types";
+import * as commentsRepository from "../repositories/comments.repository";
 
-function getNextCommentId(): number {
-  if (comments.length === 0) {
-    return 1;
-  }
+type GetCommentsOptions = {
+  postId?: number;
+  userId?: number;
+  sort?: string;
+  order?: string;
+};
 
-  return Math.max(...comments.map((comment) => comment.id)) + 1;
-}
+export async function getComments(options: GetCommentsOptions = {}) {
+  const comments = await commentsRepository.getComments({
+    postId: options.postId,
+    userId: options.userId,
+    sort: options.sort,
+    order: options.order,
+  });
 
-export function getComments() {
   return {
     items: comments.map(toCommentResponseDto),
     total: comments.length,
   };
 }
 
-export function getCommentById(id: number) {
-  const comment = comments.find((item) => item.id === id);
+export async function getCommentById(id: number) {
+  const comment = await commentsRepository.getCommentById(id);
 
   if (!comment) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
@@ -36,29 +41,46 @@ export function getCommentById(id: number) {
   return toCommentResponseDto(comment);
 }
 
-export function createComment(dto: CreateCommentRequestDto) {
+export async function createComment(dto: CreateCommentRequestDto) {
   const errors = validateCreateCommentDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const newComment: CommentEntity = {
-    id: getNextCommentId(),
-    text: dto.text.trim(),
-    postId: dto.postId,
-    userId: dto.userId,
-  };
+  try {
+    const createdComment = await commentsRepository.createComment(
+      dto.text.trim(),
+      Number(dto.postId),
+      Number(dto.userId)
+    );
 
-  comments.push(newComment);
+    return toCommentResponseDto(createdComment);
+  } catch (error: any) {
+    const message = String(error?.message || "");
 
-  return toCommentResponseDto(newComment);
+    if (message.includes("FOREIGN KEY constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid postId or userId", [
+        { field: "postId", message: "Referenced post may not exist" },
+        { field: "userId", message: "Referenced user may not exist" },
+      ]);
+    }
+
+    if (
+      message.includes("NOT NULL constraint failed") ||
+      message.includes("CHECK constraint failed")
+    ) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body");
+    }
+
+    throw error;
+  }
 }
 
-export function updateComment(id: number, dto: UpdateCommentRequestDto) {
-  const comment = comments.find((item) => item.id === id);
+export async function updateComment(id: number, dto: UpdateCommentRequestDto) {
+  const existingComment = await commentsRepository.getCommentById(id);
 
-  if (!comment) {
+  if (!existingComment) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
   }
 
@@ -68,19 +90,47 @@ export function updateComment(id: number, dto: UpdateCommentRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  comment.text = dto.text.trim();
-  comment.postId = dto.postId;
-  comment.userId = dto.userId;
+  try {
+    const updatedComment = await commentsRepository.updateComment(
+      id,
+      dto.text.trim()
+    );
 
-  return toCommentResponseDto(comment);
+    if (!updatedComment) {
+      throw new ApiError(404, "NOT_FOUND", "Comment not found");
+    }
+
+    return toCommentResponseDto(updatedComment);
+  } catch (error: any) {
+    const message = String(error?.message || "");
+
+    if (
+      message.includes("NOT NULL constraint failed") ||
+      message.includes("CHECK constraint failed")
+    ) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body");
+    }
+
+    throw error;
+  }
 }
 
-export function deleteComment(id: number) {
-  const index = comments.findIndex((item) => item.id === id);
+export async function deleteComment(id: number) {
+  const existingComment = await commentsRepository.getCommentById(id);
 
-  if (index === -1) {
+  if (!existingComment) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
   }
 
-  comments.splice(index, 1);
+  const deleted = await commentsRepository.deleteComment(id);
+
+  if (!deleted) {
+    throw new ApiError(404, "NOT_FOUND", "Comment not found");
+  }
+
+  return;
+}
+
+export async function getCommentsWithUsers(postId: number) {
+  return await commentsRepository.getCommentsWithUsers(postId);
 }

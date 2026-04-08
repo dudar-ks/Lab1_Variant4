@@ -1,28 +1,21 @@
-import { db } from "./db";
+import sqlite3 from "sqlite3";
+import path from "path";
+import fs from "fs";
 
-export function all(sql: string): Promise<any[]> {
-  return new Promise((resolve, reject) => {
-    db.all(sql, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const dataDir = path.resolve(process.cwd(), "data");
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
-export function get(sql: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    db.get(sql, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-}
+const dbPath = path.join(dataDir, "app.db");
 
-export function run(sql: string): Promise<{ lastID: number; changes: number }> {
-  return new Promise((resolve, reject) => {
-    db.run(sql, function (err) {
-      if (err) reject(err);
-      else resolve({ lastID: this.lastID, changes: this.changes });
-    });
-  });
-}
+export const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("SQLite connection error:", err.message);
+  } else {
+    console.log("SQLite connected:", dbPath);
+  }
+});
+
+db.run("PRAGMA foreign_keys = ON");

@@ -7,12 +7,24 @@ import type {
 } from "../dtos/posts.dto";
 
 export async function getPosts(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const result = await postService.getPosts();
+    const userId =
+      typeof req.query.userId === "string" ? Number(req.query.userId) : undefined;
+
+    const result = await postService.getPosts({
+      userId: userId !== undefined && !Number.isNaN(userId) ? userId : undefined,
+      category:
+        typeof req.query.category === "string" ? req.query.category : undefined,
+      sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
+      order:
+        req.query.order === "asc" || req.query.order === "desc"
+          ? req.query.order
+          : undefined,
+    });
 
     return res.status(200).json({
       items: result.items,
@@ -116,6 +128,30 @@ export async function deletePost(
     await postService.deletePost(id);
 
     return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPostWithAuthor(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
+        { field: "id", message: "Id must be a valid number" },
+      ]);
+    }
+
+    const post = await postService.getPostWithAuthor(id);
+
+    return res.status(200).json({
+      item: post,
+    });
   } catch (error) {
     next(error);
   }

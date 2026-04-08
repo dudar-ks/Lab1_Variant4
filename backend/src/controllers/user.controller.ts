@@ -3,7 +3,6 @@ import * as userService from "../services/user.service";
 import ApiError from "../errors/ApiError";
 import type {
   CreateUserRequestDto,
-  PatchUserRequestDto,
   UpdateUserRequestDto,
 } from "../dtos/users.dto";
 
@@ -13,34 +12,16 @@ export async function getUsers(
   next: NextFunction
 ) {
   try {
-    const page =
-      typeof req.query.page === "string" ? Number(req.query.page) : undefined;
-    const pageSize =
-      typeof req.query.pageSize === "string"
-        ? Number(req.query.pageSize)
-        : undefined;
-
-    const result = await userService.getUsers({
-      name: typeof req.query.name === "string" ? req.query.name : undefined,
+    const users = await userService.getUsers({
       email: typeof req.query.email === "string" ? req.query.email : undefined,
-      sortBy:
-        req.query.sortBy === "name" || req.query.sortBy === "email"
-          ? req.query.sortBy
-          : undefined,
-      sortDir:
-        req.query.sortDir === "asc" || req.query.sortDir === "desc"
-          ? req.query.sortDir
-          : undefined,
-      page: page !== undefined && !Number.isNaN(page) ? page : undefined,
-      pageSize:
-        pageSize !== undefined && !Number.isNaN(pageSize)
-          ? pageSize
-          : undefined,
+      sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
+      order: req.query.order === "asc" || req.query.order === "desc"
+        ? req.query.order
+        : undefined,
     });
 
     return res.status(200).json({
-      items: result.items,
-      total: result.total,
+      items: users,
     });
   } catch (error) {
     next(error);
@@ -102,30 +83,6 @@ export async function updateUser(
     }
 
     const user = await userService.updateUser(id, req.body);
-
-    return res.status(200).json({
-      item: user,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function patchUser(
-  req: Request<{ id: string }, {}, PatchUserRequestDto>,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const id = Number(req.params.id);
-
-    if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
-    }
-
-    const user = await userService.patchUser(id, req.body);
 
     return res.status(200).json({
       item: user,

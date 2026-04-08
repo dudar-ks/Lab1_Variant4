@@ -1,18 +1,37 @@
-import path from "path";
-import fs from "fs";
-import sqlite3 from "sqlite3";
+import { db } from "./dbClient";
 
-const dataDir = path.join(__dirname, "../../data");
-const dbPath = path.join(dataDir, "app.db");
-
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+export function all(sql: string): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    db.all(sql, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
 }
 
-export const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error(" Failed to open DB:", err.message);
-    process.exit(1);
-  }
-  console.log("✅ SQLite connected:", dbPath);
-});
+export function get(sql: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    db.get(sql, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+export function run(sql: string): Promise<{ lastID: number; changes: number }> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, function (err) {
+      if (err) reject(err);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+}
+
+export function exec(sql: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.exec(sql, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
