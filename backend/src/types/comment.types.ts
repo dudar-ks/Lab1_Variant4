@@ -3,4 +3,5 @@ export type CommentEntity = {
   text: string;
   postId: number;
   userId: number;
+  createdAt: string;
 };

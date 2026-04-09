@@ -1,183 +1,104 @@
-import type {
-  CreateUserRequestDto,
-  PatchUserRequestDto,
-  UpdateUserRequestDto,
-} from "../dtos/users.dto";
-import type {
-  CreatePostRequestDto,
-  UpdatePostRequestDto,
-} from "../dtos/posts.dto";
-import type {
-  CreateCommentRequestDto,
-  UpdateCommentRequestDto,
-} from "../dtos/comments.dto";
-import type { ValidationDetail } from "../errors/ApiError";
+type ValidationError = {
+  field: string;
+  message: string;
+};
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
+export function validateCreateUserDto(dto: {
+  name: string;
+  email: string;
+}): ValidationError[] {
+  const errors: ValidationError[] = [];
 
-export function validateCreateUserDto(body: unknown): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
-
-  if (!isRecord(body)) {
-    return [{ field: "body", message: "Request body must be an object" }];
+  if (!dto.name || dto.name.trim().length < 2) {
+    errors.push({ field: "name", message: "Name must be at least 2 characters" });
   }
 
-  if (typeof body.name !== "string" || body.name.trim().length < 2) {
-    errors.push({
-      field: "name",
-      message: "Name must be a non-empty string with at least 2 characters",
-    });
-  }
-
-  if (
-    typeof body.email !== "string" ||
-    body.email.trim().length < 5 ||
-    !isValidEmail(body.email.trim())
-  ) {
-    errors.push({
-      field: "email",
-      message: "Email must be a valid email address",
-    });
+  if (!dto.email || !isValidEmail(dto.email)) {
+    errors.push({ field: "email", message: "Email is invalid" });
   }
 
   return errors;
 }
 
-export function validateUpdateUserDto(
-  body: unknown
-): ValidationDetail[] {
-  return validateCreateUserDto(body);
+export function validateUpdateUserDto(dto: {
+  name: string;
+  email: string;
+}): ValidationError[] {
+  return validateCreateUserDto(dto);
 }
 
-export function validatePatchUserDto(body: unknown): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
+export function validateCreatePostDto(dto: {
+  title: string;
+  category: string;
+  body: string;
+  author: string;
+  userId: number;
+}): ValidationError[] {
+  const errors: ValidationError[] = [];
 
-  if (!isRecord(body)) {
-    return [{ field: "body", message: "Request body must be an object" }];
+  if (!dto.title || dto.title.trim().length < 2) {
+    errors.push({ field: "title", message: "Title must be at least 2 characters" });
   }
 
-  if ("name" in body) {
-    if (typeof body.name !== "string" || body.name.trim().length < 2) {
-      errors.push({
-        field: "name",
-        message: "Name must be a non-empty string with at least 2 characters",
-      });
-    }
+  if (!dto.category || dto.category.trim().length < 2) {
+    errors.push({ field: "category", message: "Category is required" });
   }
 
-  if ("email" in body) {
-    if (
-      typeof body.email !== "string" ||
-      body.email.trim().length < 5 ||
-      !isValidEmail(body.email.trim())
-    ) {
-      errors.push({
-        field: "email",
-        message: "Email must be a valid email address",
-      });
-    }
+  if (!dto.body || dto.body.trim().length < 3) {
+    errors.push({ field: "body", message: "Body must be at least 3 characters" });
   }
 
-  if (!("name" in body) && !("email" in body)) {
-    errors.push({
-      field: "body",
-      message: "At least one field must be provided",
-    });
+  if (!dto.author || dto.author.trim().length < 2) {
+    errors.push({ field: "author", message: "Author is required" });
+  }
+
+  if (!Number.isInteger(Number(dto.userId)) || Number(dto.userId) <= 0) {
+    errors.push({ field: "userId", message: "UserId must be a positive number" });
   }
 
   return errors;
 }
 
-export function validateCreatePostDto(body: unknown): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
+export function validateUpdatePostDto(dto: {
+  title: string;
+  category: string;
+  body: string;
+  author: string;
+  userId: number;
+}): ValidationError[] {
+  return validateCreatePostDto(dto);
+}
 
-  if (!isRecord(body)) {
-    return [{ field: "body", message: "Request body must be an object" }];
+export function validateCreateCommentDto(dto: {
+  text: string;
+  postId: number;
+  userId: number;
+}): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (!dto.text || dto.text.trim().length < 1) {
+    errors.push({ field: "text", message: "Text is required" });
   }
 
-  if (typeof body.title !== "string" || body.title.trim().length < 2) {
-    errors.push({
-      field: "title",
-      message: "Title must be a non-empty string with at least 2 characters",
-    });
+  if (!Number.isInteger(Number(dto.postId)) || Number(dto.postId) <= 0) {
+    errors.push({ field: "postId", message: "PostId must be a positive number" });
   }
 
-  if (typeof body.category !== "string" || body.category.trim().length < 2) {
-    errors.push({
-      field: "category",
-      message: "Category must be a non-empty string with at least 2 characters",
-    });
-  }
-
-  if (typeof body.body !== "string" || body.body.trim().length < 5) {
-    errors.push({
-      field: "body",
-      message: "Body must be a non-empty string with at least 5 characters",
-    });
-  }
-
-  if (typeof body.author !== "string" || body.author.trim().length < 2) {
-    errors.push({
-      field: "author",
-      message: "Author must be a non-empty string with at least 2 characters",
-    });
-  }
-
-  if (typeof body.userId !== "number" || Number.isNaN(body.userId)) {
-    errors.push({
-      field: "userId",
-      message: "UserId must be a valid number",
-    });
+  if (!Number.isInteger(Number(dto.userId)) || Number(dto.userId) <= 0) {
+    errors.push({ field: "userId", message: "UserId must be a positive number" });
   }
 
   return errors;
 }
 
-export function validateUpdatePostDto(body: unknown): ValidationDetail[] {
-  return validateCreatePostDto(body);
-}
-
-export function validateCreateCommentDto(body: unknown): ValidationDetail[] {
-  const errors: ValidationDetail[] = [];
-
-  if (!isRecord(body)) {
-    return [{ field: "body", message: "Request body must be an object" }];
-  }
-
-  if (typeof body.text !== "string" || body.text.trim().length < 2) {
-    errors.push({
-      field: "text",
-      message: "Text must be a non-empty string with at least 2 characters",
-    });
-  }
-
-  if (typeof body.postId !== "number" || Number.isNaN(body.postId)) {
-    errors.push({
-      field: "postId",
-      message: "PostId must be a valid number",
-    });
-  }
-
-  if (typeof body.userId !== "number" || Number.isNaN(body.userId)) {
-    errors.push({
-      field: "userId",
-      message: "UserId must be a valid number",
-    });
-  }
-
-  return errors;
-}
-
-export function validateUpdateCommentDto(
-  body: unknown
-): ValidationDetail[] {
-  return validateCreateCommentDto(body);
-
-  
+export function validateUpdateCommentDto(dto: {
+  text: string;
+  postId: number;
+  userId: number;
+}): ValidationError[] {
+  return validateCreateCommentDto(dto);
 }

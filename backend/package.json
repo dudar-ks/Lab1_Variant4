@@ -3,7 +3,6 @@
   "version": "0.3.0",
   "description": "REST API with SQLite for Lab 3",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

@@ -1,4 +1,5 @@
 import { all, get, run } from "../db/db";
+import type { CommentEntity } from "../types/comment.types";
 
 type GetCommentsParams = {
   postId?: number;
@@ -11,7 +12,9 @@ function escapeSqlString(value: string): string {
   return String(value).replace(/'/g, "''");
 }
 
-export async function getComments(params: GetCommentsParams = {}) {
+export async function getComments(
+  params: GetCommentsParams = {}
+): Promise<CommentEntity[]> {
   const { postId, userId, sort, order } = params;
 
   let sql = `
@@ -39,11 +42,13 @@ export async function getComments(params: GetCommentsParams = {}) {
 
   sql += ` ORDER BY ${sortField} ${sortOrder};`;
 
-  return await all(sql);
+  return await all<CommentEntity>(sql);
 }
 
-export async function getCommentById(id: number) {
-  return await get(`
+export async function getCommentById(
+  id: number
+): Promise<CommentEntity | undefined> {
+  return await get<CommentEntity>(`
     SELECT id, text, postId, userId, createdAt
     FROM Comments
     WHERE id = ${id};
@@ -54,7 +59,7 @@ export async function createComment(
   text: string,
   postId: number,
   userId: number
-) {
+): Promise<CommentEntity> {
   const now = new Date().toISOString();
   const safeText = escapeSqlString(text);
 
@@ -63,15 +68,26 @@ export async function createComment(
     VALUES ('${safeText}', ${postId}, ${userId}, '${now}');
   `);
 
-  return await getCommentById(result.lastID);
+  const createdComment = await getCommentById(result.lastID);
+
+  if (!createdComment) {
+    throw new Error("Failed to fetch created comment");
+  }
+
+  return createdComment;
 }
 
-export async function updateComment(id: number, text: string) {
+export async function updateComment(
+  id: number,
+  text: string,
+  postId: number,
+  userId: number
+): Promise<CommentEntity | null> {
   const safeText = escapeSqlString(text);
 
   const result = await run(`
     UPDATE Comments
-    SET text = '${safeText}'
+    SET text = '${safeText}', postId = ${postId}, userId = ${userId}
     WHERE id = ${id};
   `);
 
@@ -79,10 +95,11 @@ export async function updateComment(id: number, text: string) {
     return null;
   }
 
-  return await getCommentById(id);
+  const updatedComment = await getCommentById(id);
+  return updatedComment ?? null;
 }
 
-export async function deleteComment(id: number) {
+export async function deleteComment(id: number): Promise<boolean> {
   const result = await run(`
     DELETE FROM Comments
     WHERE id = ${id};
@@ -91,8 +108,10 @@ export async function deleteComment(id: number) {
   return result.changes > 0;
 }
 
-export async function getCommentsByPost(postId: number) {
-  return await all(`
+export async function getCommentsByPost(
+  postId: number
+): Promise<CommentEntity[]> {
+  return await all<CommentEntity>(`
     SELECT id, text, postId, userId, createdAt
     FROM Comments
     WHERE postId = ${postId}
@@ -101,13 +120,21 @@ export async function getCommentsByPost(postId: number) {
 }
 
 export async function getCommentsWithUsers(postId: number) {
-  return await all(`
+  return await all<{
+    id: number;
+    text: string;
+    postId: number;
+    userId: number;
+    createdAt: string;
+    userName: string;
+    userEmail: string;
+  }>(`
     SELECT
       c.id,
       c.text,
       c.postId,
+      c.userId,
       c.createdAt,
-      u.id AS userId,
       u.name AS userName,
       u.email AS userEmail
     FROM Comments c

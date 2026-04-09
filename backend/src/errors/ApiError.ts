@@ -1,4 +1,4 @@
-export type ValidationDetail = {
+type ValidationDetail = {
   field: string;
   message: string;
 };

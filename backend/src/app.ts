@@ -1,26 +1,24 @@
 import express from "express";
-
-import usersRoutes from "./routes/users.routes.js";
-import postsRoutes from "./routes/posts.routes.js";
-import commentsRoutes from "./routes/comments.routes.js";
-
-import { errorHandlerMiddleware } from "./middleware/error-handler.middleware.js";
+import usersRoutes from "./routes/users.routes";
+import postsRoutes from "./routes/posts.routes";
+import commentsRoutes from "./routes/comments.routes";
+import { requestLoggingMiddleware } from "./middleware/request-logging.middleware";
+import { errorHandlerMiddleware } from "./middleware/error-handler.middleware";
 
 const app = express();
 
 app.use(express.json());
-
-// healthcheck
+app.use(requestLoggingMiddleware);
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.status(200).json({ status: "ok" });
 });
 
-// routes
+
 app.use("/api/users", usersRoutes);
 app.use("/api/posts", postsRoutes);
 app.use("/api/comments", commentsRoutes);
 
-// error handler
+
 app.use(errorHandlerMiddleware);
 
 export default app;

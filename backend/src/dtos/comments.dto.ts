@@ -15,4 +15,5 @@ export type CommentResponseDto = {
   text: string;
   postId: number;
   userId: number;
+  createdAt: string;
 };

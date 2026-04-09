@@ -1,4 +1,4 @@
-export type Post = {
+export type PostEntity = {
   id: number;
   title: string;
   category: string;

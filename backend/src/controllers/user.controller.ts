@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import * as userService from "../services/user.service";
-import ApiError from "../errors/ApiError";
 import type {
   CreateUserRequestDto,
   UpdateUserRequestDto,
@@ -12,17 +11,22 @@ export async function getUsers(
   next: NextFunction
 ) {
   try {
-    const users = await userService.getUsers({
+    const result = await userService.getUsers({
+      name: typeof req.query.name === "string" ? req.query.name : undefined,
       email: typeof req.query.email === "string" ? req.query.email : undefined,
-      sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
-      order: req.query.order === "asc" || req.query.order === "desc"
-        ? req.query.order
-        : undefined,
+      sortBy:
+        req.query.sortBy === "id" ||
+        req.query.sortBy === "name" ||
+        req.query.sortBy === "email"
+          ? req.query.sortBy
+          : undefined,
+      sortDir:
+        req.query.sortDir === "asc" || req.query.sortDir === "desc"
+          ? req.query.sortDir
+          : undefined,
     });
 
-    return res.status(200).json({
-      items: users,
-    });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -35,18 +39,9 @@ export async function getUserById(
 ) {
   try {
     const id = Number(req.params.id);
+    const result = await userService.getUserById(id);
 
-    if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
-    }
-
-    const user = await userService.getUserById(id);
-
-    return res.status(200).json({
-      item: user,
-    });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -58,11 +53,9 @@ export async function createUser(
   next: NextFunction
 ) {
   try {
-    const user = await userService.createUser(req.body);
+    const result = await userService.createUser(req.body);
 
-    return res.status(201).json({
-      item: user,
-    });
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }
@@ -75,18 +68,9 @@ export async function updateUser(
 ) {
   try {
     const id = Number(req.params.id);
+    const result = await userService.updateUser(id, req.body);
 
-    if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
-    }
-
-    const user = await userService.updateUser(id, req.body);
-
-    return res.status(200).json({
-      item: user,
-    });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -99,16 +83,9 @@ export async function deleteUser(
 ) {
   try {
     const id = Number(req.params.id);
-
-    if (Number.isNaN(id)) {
-      throw new ApiError(400, "VALIDATION_ERROR", "User id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
-      ]);
-    }
-
     await userService.deleteUser(id);
 
-    return res.status(204).send();
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

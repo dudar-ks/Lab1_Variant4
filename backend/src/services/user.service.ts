@@ -1,29 +1,29 @@
 import ApiError from "../errors/ApiError";
 import { toUserResponseDto } from "../utils/mappers";
-import {
-  validateCreateUserDto,
-  validateUpdateUserDto,
-} from "../utils/validators";
 import type {
   CreateUserRequestDto,
   UpdateUserRequestDto,
 } from "../dtos/users.dto";
 import * as usersRepository from "../repositories/users.repository";
+import {
+  validateCreateUserDto,
+  validateUpdateUserDto,
+} from "../utils/validators";
 
 type GetUsersOptions = {
+  name?: string;
   email?: string;
-  sort?: string;
-  order?: string;
+  sortBy?: "id" | "name" | "email";
+  sortDir?: "asc" | "desc";
 };
 
 export async function getUsers(options: GetUsersOptions = {}) {
-  const users = await usersRepository.getUsers({
-    email: options.email,
-    sort: options.sort,
-    order: options.order,
-  });
+  const users = await usersRepository.getUsers(options);
 
-  return users.map(toUserResponseDto);
+  return {
+    items: users.map(toUserResponseDto),
+    total: users.length,
+  };
 }
 
 export async function getUserById(id: number) {
@@ -43,24 +43,12 @@ export async function createUser(dto: CreateUserRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  try {
-    const createdUser = await usersRepository.createUser(
-      dto.name.trim(),
-      dto.email.trim()
-    );
+  const createdUser = await usersRepository.createUser(
+    dto.name.trim(),
+    dto.email.trim()
+  );
 
-    return toUserResponseDto(createdUser);
-  } catch (error: any) {
-    const message = String(error?.message || "");
-
-    if (message.includes("UNIQUE constraint failed")) {
-      throw new ApiError(409, "CONFLICT", "Email already exists", [
-        { field: "email", message: "Email already exists" },
-      ]);
-    }
-
-    throw error;
-  }
+  return toUserResponseDto(createdUser);
 }
 
 export async function updateUser(id: number, dto: UpdateUserRequestDto) {
@@ -70,63 +58,23 @@ export async function updateUser(id: number, dto: UpdateUserRequestDto) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
   }
 
-  const existingUser = await usersRepository.getUserById(id);
+  const updatedUser = await usersRepository.updateUser(
+    id,
+    dto.name.trim(),
+    dto.email.trim()
+  );
 
-  if (!existingUser) {
+  if (!updatedUser) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
   }
 
-  try {
-    const updatedUser = await usersRepository.updateUser(
-      id,
-      dto.name.trim(),
-      dto.email.trim()
-    );
-
-    if (!updatedUser) {
-      throw new ApiError(404, "NOT_FOUND", "User not found");
-    }
-
-    return toUserResponseDto(updatedUser);
-  } catch (error: any) {
-    const message = String(error?.message || "");
-
-    if (message.includes("UNIQUE constraint failed")) {
-      throw new ApiError(409, "CONFLICT", "Email already exists", [
-        { field: "email", message: "Email already exists" },
-      ]);
-    }
-
-    throw error;
-  }
+  return toUserResponseDto(updatedUser);
 }
 
 export async function deleteUser(id: number) {
-  const existingUser = await usersRepository.getUserById(id);
+  const deleted = await usersRepository.deleteUser(id);
 
-  if (!existingUser) {
+  if (!deleted) {
     throw new ApiError(404, "NOT_FOUND", "User not found");
-  }
-
-  try {
-    const deleted = await usersRepository.deleteUser(id);
-
-    if (!deleted) {
-      throw new ApiError(404, "NOT_FOUND", "User not found");
-    }
-
-    return;
-  } catch (error: any) {
-    const message = String(error?.message || "");
-
-    if (message.includes("FOREIGN KEY constraint failed")) {
-      throw new ApiError(
-        409,
-        "CONFLICT",
-        "User cannot be deleted because related records exist"
-      );
-    }
-
-    throw error;
   }
 }

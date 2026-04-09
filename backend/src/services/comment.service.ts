@@ -93,7 +93,9 @@ export async function updateComment(id: number, dto: UpdateCommentRequestDto) {
   try {
     const updatedComment = await commentsRepository.updateComment(
       id,
-      dto.text.trim()
+      dto.text.trim(),
+      Number(dto.postId),
+      Number(dto.userId)
     );
 
     if (!updatedComment) {
@@ -103,6 +105,13 @@ export async function updateComment(id: number, dto: UpdateCommentRequestDto) {
     return toCommentResponseDto(updatedComment);
   } catch (error: any) {
     const message = String(error?.message || "");
+
+    if (message.includes("FOREIGN KEY constraint failed")) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Invalid postId or userId", [
+        { field: "postId", message: "Referenced post may not exist" },
+        { field: "userId", message: "Referenced user may not exist" },
+      ]);
+    }
 
     if (
       message.includes("NOT NULL constraint failed") ||
@@ -127,8 +136,6 @@ export async function deleteComment(id: number) {
   if (!deleted) {
     throw new ApiError(404, "NOT_FOUND", "Comment not found");
   }
-
-  return;
 }
 
 export async function getCommentsWithUsers(postId: number) {

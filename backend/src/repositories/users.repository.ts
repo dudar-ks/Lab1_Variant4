@@ -1,62 +1,84 @@
 import { all, get, run } from "../db/db";
+import type { User } from "../types/user.types";
 
-export async function getUsers(params: {
+type GetUsersOptions = {
+  name?: string;
   email?: string;
-  sort?: string;
-  order?: string;
-}) {
-  const { email, sort, order } = params;
+  sortBy?: "id" | "name" | "email";
+  sortDir?: "asc" | "desc";
+};
 
-  let sql = `
-    SELECT id, name, email, createdAt
-    FROM Users
-  `;
+function escapeSqlString(value: string): string {
+  return String(value).replace(/'/g, "''");
+}
+
+export async function getUsers(
+  options: GetUsersOptions = {}
+): Promise<User[]> {
+  let sql = `SELECT id, name, email FROM Users`;
 
   const conditions: string[] = [];
 
-  if (email) {
-    const safeEmail = email.replace(/'/g, "''");
-    conditions.push(`email = '${safeEmail}'`);
+  if (options.name) {
+    conditions.push(`name LIKE '%${escapeSqlString(options.name)}%'`);
+  }
+
+  if (options.email) {
+    conditions.push(`email LIKE '%${escapeSqlString(options.email)}%'`);
   }
 
   if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;
   }
 
-  const allowedSort = ["id", "name", "email", "createdAt"];
-  const sortField = allowedSort.includes(sort || "") ? sort : "id";
-  const sortOrder = order === "desc" ? "DESC" : "ASC";
+  const allowedSortBy = ["id", "name", "email"];
+  const sortBy = allowedSortBy.includes(options.sortBy || "")
+    ? options.sortBy
+    : "id";
 
-  sql += ` ORDER BY ${sortField} ${sortOrder};`;
+  const sortDir = options.sortDir === "asc" ? "ASC" : "DESC";
 
-  return await all(sql);
+  sql += ` ORDER BY ${sortBy} ${sortDir};`;
+
+  return await all<User>(sql);
 }
 
-export async function getUserById(id: number) {
-  return await get(`
-    SELECT id, name, email, createdAt
+export async function getUserById(id: number): Promise<User | undefined> {
+  return await get<User>(`
+    SELECT id, name, email
     FROM Users
     WHERE id = ${id};
   `);
 }
 
-export async function createUser(name: string, email: string) {
-  const now = new Date().toISOString();
-
-  const safeName = name.replace(/'/g, "''");
-  const safeEmail = email.replace(/'/g, "''");
+export async function createUser(
+  name: string,
+  email: string
+): Promise<User> {
+  const safeName = escapeSqlString(name);
+  const safeEmail = escapeSqlString(email);
 
   const result = await run(`
     INSERT INTO Users (name, email, createdAt)
-    VALUES ('${safeName}', '${safeEmail}', '${now}');
+    VALUES ('${safeName}', '${safeEmail}', '${new Date().toISOString()}');
   `);
 
-  return await getUserById(result.lastID);
+  const createdUser = await getUserById(result.lastID);
+
+  if (!createdUser) {
+    throw new Error("Failed to fetch created user");
+  }
+
+  return createdUser;
 }
 
-export async function updateUser(id: number, name: string, email: string) {
-  const safeName = name.replace(/'/g, "''");
-  const safeEmail = email.replace(/'/g, "''");
+export async function updateUser(
+  id: number,
+  name: string,
+  email: string
+): Promise<User | null> {
+  const safeName = escapeSqlString(name);
+  const safeEmail = escapeSqlString(email);
 
   const result = await run(`
     UPDATE Users
@@ -68,10 +90,11 @@ export async function updateUser(id: number, name: string, email: string) {
     return null;
   }
 
-  return await getUserById(id);
+  const updatedUser = await getUserById(id);
+  return updatedUser ?? null;
 }
 
-export async function deleteUser(id: number) {
+export async function deleteUser(id: number): Promise<boolean> {
   const result = await run(`
     DELETE FROM Users
     WHERE id = ${id};

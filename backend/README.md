@@ -1,97 +1,102 @@
 # REST API з використанням SQLite
 
 ## Опис
-
-У цій лабораторній роботі було розширено бекенд застосунку шляхом додавання збереження даних у SQLite.  
-Реалізовано роботу з базою даних без використання ORM.
-
----
+У цій лабораторній роботі бекенд застосунку розширено шляхом підключення SQLite.
+Робота з базою даних реалізована без ORM, через сирі SQL-запити.
 
 ## Як запустити проєкт
 
-1. Перейти в папку backend:
 ```bash
 cd backend
-Встановити залежності:
 npm install
-Запустити сервер:
 npm run dev
 
 Сервер буде доступний за адресою:
 
 http://localhost:3000
-База даних
+Як зібрати проєкт
+npm run build
+npm start
+Ініціалізація та файл бази даних
 
-Файл бази даних створюється автоматично при запуску:
+База даних створюється автоматично під час запуску застосунку.
+
+Шлях до файлу бази даних:
 
 ./data/app.db
 
-Файл не зберігається в репозиторії.
+Файл .db не зберігається в репозиторії.
 
+Seed тестових даних
+
+Для заповнення бази тестовими записами:
+
+npm run seed
 Схема бази даних
-
 Таблиця Users
-id (PRIMARY KEY)
-name (TEXT, NOT NULL)
-email (TEXT, NOT NULL, UNIQUE)
-
+id — INTEGER PRIMARY KEY AUTOINCREMENT
+name — TEXT NOT NULL CHECK(length(name) >= 2)
+email — TEXT NOT NULL UNIQUE
+createdAt — TEXT NOT NULL
 Таблиця Posts
-id (PRIMARY KEY)
-title (TEXT, NOT NULL)
-category (TEXT, NOT NULL)
-body (TEXT, NOT NULL)
-author (TEXT, NOT NULL)
-userId (INTEGER, FOREIGN KEY → Users.id)
-createdAt (TEXT, NOT NULL)
-
+id — INTEGER PRIMARY KEY AUTOINCREMENT
+title — TEXT NOT NULL CHECK(length(title) >= 2)
+category — TEXT NOT NULL
+body — TEXT NOT NULL CHECK(length(body) >= 3)
+author — TEXT NOT NULL
+userId — INTEGER NOT NULL
+createdAt — TEXT NOT NULL
+FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
 Таблиця Comments
-id (PRIMARY KEY)
-text (TEXT, NOT NULL)
-postId (INTEGER, FOREIGN KEY → Posts.id)
-userId (INTEGER, FOREIGN KEY → Users.id)
-
-Зв’язки
-Один користувач → багато постів (1:N)
-Один пост → багато коментарів (1:N)
-
-Використовується FOREIGN KEY з підтримкою цілісності даних.
-
-Приклади запитів
-Створити користувача
-POST /api/users
-{
-  "name": "Oksana",
-  "email": "oksana@example.com"
-}
-Створити пост
-POST /api/posts
-{
-  "title": "My first post",
-  "category": "study",
-  "body": "Hello SQLite",
-  "author": "Oksana",
-  "userId": 1
-}
-Отримати всі пости
-GET /api/posts
-Отримати пост за id
-GET /api/posts/1
-Приклад SQL-запиту (WHERE + ORDER + LIMIT)
-SELECT * FROM posts
+id — INTEGER PRIMARY KEY AUTOINCREMENT
+text — TEXT NOT NULL CHECK(length(text) >= 1)
+postId — INTEGER NOT NULL
+userId — INTEGER NOT NULL
+createdAt — TEXT NOT NULL
+FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE
+FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE RESTRICT
+Зв’язки між таблицями
+Один користувач → багато постів (Users → Posts)
+Один пост → багато коментарів (Posts → Comments)
+Що реалізовано
+підключення SQLite до Node.js-застосунку;
+автоматичне створення схеми при старті;
+CRUD для Users, Posts, Comments;
+фільтрація і сортування списків;
+FOREIGN KEY, CHECK, UNIQUE, NOT NULL;
+seed тестових даних;
+централізована обробка помилок;
+приклади JOIN-запитів.
+Приклади HTTP-запитів
+1. Створити користувача
+curl -X POST http://localhost:3000/api/users ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"Oksana Dudar\",\"email\":\"oksana@example.com\"}"
+2. Отримати список користувачів
+curl http://localhost:3000/api/users
+3. Створити пост
+curl -X POST http://localhost:3000/api/posts ^
+  -H "Content-Type: application/json" ^
+  -d "{\"title\":\"My first post\",\"category\":\"study\",\"body\":\"Hello SQLite world\",\"author\":\"Oksana Dudar\",\"userId\":1}"
+4. Отримати список постів з фільтрацією і сортуванням
+curl "http://localhost:3000/api/posts?category=study&sort=createdAt&order=desc"
+5. Оновити коментар
+curl -X PUT http://localhost:3000/api/comments/1 ^
+  -H "Content-Type: application/json" ^
+  -d "{\"text\":\"Updated comment text\",\"postId\":1,\"userId\":2}"
+6. Видалити пост
+curl -X DELETE http://localhost:3000/api/posts/1
+Приклад SQL-запиту з WHERE + ORDER + LIMIT
+SELECT id, title, category, createdAt
+FROM Posts
 WHERE category = 'study'
 ORDER BY createdAt DESC
 LIMIT 5;
-
-Обробка помилок
+HTTP-коди стану
+200 — успішне отримання або оновлення
 201 — успішне створення
+204 — успішне видалення
 400 — помилка валідації
 404 — ресурс не знайдено
+409 — конфлікт даних
 500 — внутрішня помилка сервера
-
-  Що реалізовано
-Підключення SQLite до Node.js
-Ініціалізація бази даних при старті
-CRUD для сутностей Users і Posts
-Зв’язки між таблицями через FOREIGN KEY
-Валідація вхідних даних
-Обробка помилок через middleware
