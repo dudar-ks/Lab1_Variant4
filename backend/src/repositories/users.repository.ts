@@ -1,66 +1,52 @@
 import { all, get, run } from "../db/db";
-import type { User } from "../types/user.types";
+import type { UserEntity } from "../types/user.types";
+import { escapeSqlString } from "../utils/sql.ts";
 
-type GetUsersOptions = {
-  name?: string;
+export async function getUsers(params: {
   email?: string;
-  sortBy?: "id" | "name" | "email";
-  sortDir?: "asc" | "desc";
-};
+  sort?: string;
+  order?: string;
+}): Promise<UserEntity[]> {
+  const { email, sort, order } = params;
 
-function escapeSqlString(value: string): string {
-  return String(value).replace(/'/g, "''");
-}
-
-export async function getUsers(
-  options: GetUsersOptions = {}
-): Promise<User[]> {
-  let sql = `SELECT id, name, email FROM Users`;
+  let sql = `
+    SELECT id, name, email, createdAt
+    FROM Users
+  `;
 
   const conditions: string[] = [];
 
-  if (options.name) {
-    conditions.push(`name LIKE '%${escapeSqlString(options.name)}%'`);
-  }
-
-  if (options.email) {
-    conditions.push(`email LIKE '%${escapeSqlString(options.email)}%'`);
+  if (email) {
+    conditions.push(`email = '${escapeSqlString(email)}'`);
   }
 
   if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;
   }
 
-  const allowedSortBy = ["id", "name", "email"];
-  const sortBy = allowedSortBy.includes(options.sortBy || "")
-    ? options.sortBy
-    : "id";
+  const allowedSort = ["id", "name", "email", "createdAt"];
+  const sortField = allowedSort.includes(sort || "") ? sort : "id";
+  const sortOrder = order === "desc" ? "DESC" : "ASC";
 
-  const sortDir = options.sortDir === "asc" ? "ASC" : "DESC";
+  sql += ` ORDER BY ${sortField} ${sortOrder};`;
 
-  sql += ` ORDER BY ${sortBy} ${sortDir};`;
-
-  return await all<User>(sql);
+  return await all<UserEntity>(sql);
 }
 
-export async function getUserById(id: number): Promise<User | undefined> {
-  return await get<User>(`
-    SELECT id, name, email
+export async function getUserById(id: number): Promise<UserEntity | undefined> {
+  return await get<UserEntity>(`
+    SELECT id, name, email, createdAt
     FROM Users
     WHERE id = ${id};
   `);
 }
 
-export async function createUser(
-  name: string,
-  email: string
-): Promise<User> {
-  const safeName = escapeSqlString(name);
-  const safeEmail = escapeSqlString(email);
+export async function createUser(name: string, email: string): Promise<UserEntity> {
+  const now = new Date().toISOString();
 
   const result = await run(`
     INSERT INTO Users (name, email, createdAt)
-    VALUES ('${safeName}', '${safeEmail}', '${new Date().toISOString()}');
+    VALUES ('${escapeSqlString(name)}', '${escapeSqlString(email)}', '${now}');
   `);
 
   const createdUser = await getUserById(result.lastID);
@@ -76,13 +62,10 @@ export async function updateUser(
   id: number,
   name: string,
   email: string
-): Promise<User | null> {
-  const safeName = escapeSqlString(name);
-  const safeEmail = escapeSqlString(email);
-
+): Promise<UserEntity | null> {
   const result = await run(`
     UPDATE Users
-    SET name = '${safeName}', email = '${safeEmail}'
+    SET name = '${escapeSqlString(name)}', email = '${escapeSqlString(email)}'
     WHERE id = ${id};
   `);
 
@@ -90,15 +73,10 @@ export async function updateUser(
     return null;
   }
 
-  const updatedUser = await getUserById(id);
-  return updatedUser ?? null;
+  return (await getUserById(id)) ?? null;
 }
 
 export async function deleteUser(id: number): Promise<boolean> {
-  const result = await run(`
-    DELETE FROM Users
-    WHERE id = ${id};
-  `);
-
+  const result = await run(`DELETE FROM Users WHERE id = ${id};`);
   return result.changes > 0;
 }

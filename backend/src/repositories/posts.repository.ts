@@ -1,5 +1,6 @@
 import { all, get, run } from "../db/db";
-import type { PostEntity } from "../types/post.types";
+import type { PostEntity, PostWithAuthorEntity } from "../types/post.types";
+import { escapeSqlString } from "../utils/sql.ts";
 
 type GetPostsOptions = {
   category?: string;
@@ -8,10 +9,6 @@ type GetPostsOptions = {
   sort?: string;
   order?: string;
 };
-
-function escapeSqlString(value: string): string {
-  return String(value).replace(/'/g, "''");
-}
 
 export async function getPosts(
   options: GetPostsOptions = {}
@@ -45,14 +42,12 @@ export async function getPosts(
     : "id";
   const sortOrder = options.order === "asc" ? "ASC" : "DESC";
 
-  sql += ` ORDER BY ${sortField} ${sortOrder};`;
+  sql += ` ORDER BY ${sortField} ${sortOrder} LIMIT 100;`;
 
   return await all<PostEntity>(sql);
 }
 
-export async function getPostById(
-  id: number
-): Promise<PostEntity | undefined> {
+export async function getPostById(id: number): Promise<PostEntity | undefined> {
   return await get<PostEntity>(`
     SELECT id, title, category, body, author, userId, createdAt
     FROM Posts
@@ -111,31 +106,18 @@ export async function updatePost(
     return null;
   }
 
-  const updatedPost = await getPostById(id);
-  return updatedPost ?? null;
+  return (await getPostById(id)) ?? null;
 }
 
 export async function deletePost(id: number): Promise<boolean> {
-  const result = await run(`
-    DELETE FROM Posts
-    WHERE id = ${id};
-  `);
-
+  const result = await run(`DELETE FROM Posts WHERE id = ${id};`);
   return result.changes > 0;
 }
 
-export async function getPostsWithAuthors() {
-  return await all<{
-    id: number;
-    title: string;
-    category: string;
-    body: string;
-    author: string;
-    userId: number;
-    createdAt: string;
-    userName: string;
-    userEmail: string;
-  }>(`
+export async function getPostWithAuthor(
+  id: number
+): Promise<PostWithAuthorEntity | undefined> {
+  return await get<PostWithAuthorEntity>(`
     SELECT
       p.id,
       p.title,
@@ -148,6 +130,18 @@ export async function getPostsWithAuthors() {
       u.email AS userEmail
     FROM Posts p
     JOIN Users u ON p.userId = u.id
-    ORDER BY p.id DESC;
+    WHERE p.id = ${id};
+  `);
+}
+
+export async function getPostStats(): Promise<{
+  totalPosts: number;
+  avgTitleLength: number;
+} | undefined> {
+  return await get(`
+    SELECT
+      COUNT(*) AS totalPosts,
+      AVG(LENGTH(title)) AS avgTitleLength
+    FROM Posts;
   `);
 }

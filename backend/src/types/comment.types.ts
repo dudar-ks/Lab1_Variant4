@@ -5,3 +5,8 @@ export type CommentEntity = {
   userId: number;
   createdAt: string;
 };
+
+export type CommentWithUserEntity = CommentEntity & {
+  userName: string;
+  userEmail: string;
+};

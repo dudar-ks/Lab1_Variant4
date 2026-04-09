@@ -1,17 +1,17 @@
 import app from "./app";
-import { initDb } from "./db/initDb";
+import { runMigrations } from "./db/migrate";
 
 const PORT = Number(process.env.PORT) || 3000;
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   try {
-    await initDb();
+    await runMigrations();
 
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`API started on http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("Failed to start application:", error);
     process.exit(1);
   }
 }

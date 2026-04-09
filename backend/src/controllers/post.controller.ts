@@ -3,7 +3,7 @@ import * as postService from "../services/post.service";
 import ApiError from "../errors/ApiError";
 import type {
   CreatePostRequestDto,
-  UpdatePostRequestDto,
+  UpdatePostRequestDto
 } from "../dtos/posts.dto";
 
 export async function getPosts(
@@ -19,17 +19,15 @@ export async function getPosts(
       userId: userId !== undefined && !Number.isNaN(userId) ? userId : undefined,
       category:
         typeof req.query.category === "string" ? req.query.category : undefined,
+      author: typeof req.query.author === "string" ? req.query.author : undefined,
       sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
       order:
         req.query.order === "asc" || req.query.order === "desc"
           ? req.query.order
-          : undefined,
+          : undefined
     });
 
-    return res.status(200).json({
-      items: result.items,
-      total: result.total,
-    });
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -45,50 +43,32 @@ export async function getPostById(
 
     if (Number.isNaN(id)) {
       throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
+        { field: "id", message: "Id must be a valid number" }
       ]);
     }
 
     const post = await postService.getPostById(id);
-
-    return res.status(200).json({
-      item: post,
-    });
+    return res.status(200).json({ item: post });
   } catch (error) {
     next(error);
   }
 }
 
 export async function createPost(
-  req: Request<{}, {}, CreatePostRequestDto>,
+  req: Request<Record<string, never>, Record<string, never>, CreatePostRequestDto>,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const { title, category, body, author, userId } = req.body;
-
-    if (!title || !category || !body || !author || userId === undefined) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Required fields are missing", [
-        { field: "title", message: "Title is required" },
-        { field: "category", message: "Category is required" },
-        { field: "body", message: "Body is required" },
-        { field: "author", message: "Author is required" },
-        { field: "userId", message: "UserId is required" },
-      ]);
-    }
-
     const post = await postService.createPost(req.body);
-
-    return res.status(201).json({
-      item: post,
-    });
+    return res.status(201).json({ item: post });
   } catch (error) {
     next(error);
   }
 }
 
 export async function updatePost(
-  req: Request<{ id: string }, {}, UpdatePostRequestDto>,
+  req: Request<{ id: string }, Record<string, never>, UpdatePostRequestDto>,
   res: Response,
   next: NextFunction
 ) {
@@ -97,15 +77,12 @@ export async function updatePost(
 
     if (Number.isNaN(id)) {
       throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
+        { field: "id", message: "Id must be a valid number" }
       ]);
     }
 
     const post = await postService.updatePost(id, req.body);
-
-    return res.status(200).json({
-      item: post,
-    });
+    return res.status(200).json({ item: post });
   } catch (error) {
     next(error);
   }
@@ -121,12 +98,11 @@ export async function deletePost(
 
     if (Number.isNaN(id)) {
       throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
+        { field: "id", message: "Id must be a valid number" }
       ]);
     }
 
     await postService.deletePost(id);
-
     return res.status(204).send();
   } catch (error) {
     next(error);
@@ -143,15 +119,25 @@ export async function getPostWithAuthor(
 
     if (Number.isNaN(id)) {
       throw new ApiError(400, "VALIDATION_ERROR", "Post id must be a valid number", [
-        { field: "id", message: "Id must be a valid number" },
+        { field: "id", message: "Id must be a valid number" }
       ]);
     }
 
     const post = await postService.getPostWithAuthor(id);
+    return res.status(200).json({ item: post });
+  } catch (error) {
+    next(error);
+  }
+}
 
-    return res.status(200).json({
-      item: post,
-    });
+export async function getPostStats(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const stats = await postService.getPostStats();
+    return res.status(200).json({ item: stats });
   } catch (error) {
     next(error);
   }

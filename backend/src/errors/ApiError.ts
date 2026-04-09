@@ -1,4 +1,4 @@
-type ValidationDetail = {
+export type ValidationDetail = {
   field: string;
   message: string;
 };
@@ -6,13 +6,13 @@ type ValidationDetail = {
 export default class ApiError extends Error {
   status: number;
   code: string;
-  details?: ValidationDetail[];
+  details: ValidationDetail[];
 
   constructor(
     status: number,
     code: string,
     message: string,
-    details?: ValidationDetail[]
+    details: ValidationDetail[] = []
   ) {
     super(message);
     this.status = status;

@@ -1,5 +1,9 @@
 import { all, get, run } from "../db/db";
-import type { CommentEntity } from "../types/comment.types";
+import type {
+  CommentEntity,
+  CommentWithUserEntity
+} from "../types/comment.types";
+import { escapeSqlString } from "../utils/sql.ts";
 
 type GetCommentsParams = {
   postId?: number;
@@ -7,10 +11,6 @@ type GetCommentsParams = {
   sort?: string;
   order?: string;
 };
-
-function escapeSqlString(value: string): string {
-  return String(value).replace(/'/g, "''");
-}
 
 export async function getComments(
   params: GetCommentsParams = {}
@@ -40,7 +40,7 @@ export async function getComments(
   const sortField = allowedSortFields.includes(sort || "") ? sort : "id";
   const sortOrder = order === "asc" ? "ASC" : "DESC";
 
-  sql += ` ORDER BY ${sortField} ${sortOrder};`;
+  sql += ` ORDER BY ${sortField} ${sortOrder} LIMIT 100;`;
 
   return await all<CommentEntity>(sql);
 }
@@ -61,11 +61,10 @@ export async function createComment(
   userId: number
 ): Promise<CommentEntity> {
   const now = new Date().toISOString();
-  const safeText = escapeSqlString(text);
 
   const result = await run(`
     INSERT INTO Comments (text, postId, userId, createdAt)
-    VALUES ('${safeText}', ${postId}, ${userId}, '${now}');
+    VALUES ('${escapeSqlString(text)}', ${postId}, ${userId}, '${now}');
   `);
 
   const createdComment = await getCommentById(result.lastID);
@@ -83,11 +82,9 @@ export async function updateComment(
   postId: number,
   userId: number
 ): Promise<CommentEntity | null> {
-  const safeText = escapeSqlString(text);
-
   const result = await run(`
     UPDATE Comments
-    SET text = '${safeText}', postId = ${postId}, userId = ${userId}
+    SET text = '${escapeSqlString(text)}', postId = ${postId}, userId = ${userId}
     WHERE id = ${id};
   `);
 
@@ -95,40 +92,18 @@ export async function updateComment(
     return null;
   }
 
-  const updatedComment = await getCommentById(id);
-  return updatedComment ?? null;
+  return (await getCommentById(id)) ?? null;
 }
 
 export async function deleteComment(id: number): Promise<boolean> {
-  const result = await run(`
-    DELETE FROM Comments
-    WHERE id = ${id};
-  `);
-
+  const result = await run(`DELETE FROM Comments WHERE id = ${id};`);
   return result.changes > 0;
 }
 
-export async function getCommentsByPost(
+export async function getCommentsWithUsers(
   postId: number
-): Promise<CommentEntity[]> {
-  return await all<CommentEntity>(`
-    SELECT id, text, postId, userId, createdAt
-    FROM Comments
-    WHERE postId = ${postId}
-    ORDER BY id DESC;
-  `);
-}
-
-export async function getCommentsWithUsers(postId: number) {
-  return await all<{
-    id: number;
-    text: string;
-    postId: number;
-    userId: number;
-    createdAt: string;
-    userName: string;
-    userEmail: string;
-  }>(`
+): Promise<CommentWithUserEntity[]> {
+  return await all<CommentWithUserEntity>(`
     SELECT
       c.id,
       c.text,

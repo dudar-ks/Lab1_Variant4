@@ -8,13 +8,9 @@ export type UpdateUserRequestDto = {
   email: string;
 };
 
-export type PatchUserRequestDto = {
-  name?: string;
-  email?: string;
-};
-
 export type UserResponseDto = {
   id: number;
   name: string;
   email: string;
+  createdAt: string;
 };

@@ -1,12 +1,15 @@
 import ApiError from "../errors/ApiError";
-import { toCommentResponseDto } from "../utils/mappers";
+import {
+  toCommentResponseDto,
+  toCommentWithUserResponse
+} from "../utils/mappers";
 import {
   validateCreateCommentDto,
-  validateUpdateCommentDto,
+  validateUpdateCommentDto
 } from "../utils/validators";
 import type {
   CreateCommentRequestDto,
-  UpdateCommentRequestDto,
+  UpdateCommentRequestDto
 } from "../dtos/comments.dto";
 import * as commentsRepository from "../repositories/comments.repository";
 
@@ -18,16 +21,11 @@ type GetCommentsOptions = {
 };
 
 export async function getComments(options: GetCommentsOptions = {}) {
-  const comments = await commentsRepository.getComments({
-    postId: options.postId,
-    userId: options.userId,
-    sort: options.sort,
-    order: options.order,
-  });
+  const comments = await commentsRepository.getComments(options);
 
   return {
     items: comments.map(toCommentResponseDto),
-    total: comments.length,
+    total: comments.length
   };
 }
 
@@ -56,13 +54,13 @@ export async function createComment(dto: CreateCommentRequestDto) {
     );
 
     return toCommentResponseDto(createdComment);
-  } catch (error: any) {
-    const message = String(error?.message || "");
+  } catch (error: unknown) {
+    const message = String((error as { message?: string })?.message || "");
 
     if (message.includes("FOREIGN KEY constraint failed")) {
       throw new ApiError(400, "VALIDATION_ERROR", "Invalid postId or userId", [
         { field: "postId", message: "Referenced post may not exist" },
-        { field: "userId", message: "Referenced user may not exist" },
+        { field: "userId", message: "Referenced user may not exist" }
       ]);
     }
 
@@ -103,13 +101,13 @@ export async function updateComment(id: number, dto: UpdateCommentRequestDto) {
     }
 
     return toCommentResponseDto(updatedComment);
-  } catch (error: any) {
-    const message = String(error?.message || "");
+  } catch (error: unknown) {
+    const message = String((error as { message?: string })?.message || "");
 
     if (message.includes("FOREIGN KEY constraint failed")) {
       throw new ApiError(400, "VALIDATION_ERROR", "Invalid postId or userId", [
         { field: "postId", message: "Referenced post may not exist" },
-        { field: "userId", message: "Referenced user may not exist" },
+        { field: "userId", message: "Referenced user may not exist" }
       ]);
     }
 
@@ -124,7 +122,7 @@ export async function updateComment(id: number, dto: UpdateCommentRequestDto) {
   }
 }
 
-export async function deleteComment(id: number) {
+export async function deleteComment(id: number): Promise<void> {
   const existingComment = await commentsRepository.getCommentById(id);
 
   if (!existingComment) {
@@ -139,5 +137,6 @@ export async function deleteComment(id: number) {
 }
 
 export async function getCommentsWithUsers(postId: number) {
-  return await commentsRepository.getCommentsWithUsers(postId);
+  const items = await commentsRepository.getCommentsWithUsers(postId);
+  return items.map(toCommentWithUserResponse);
 }

@@ -12,46 +12,18 @@ export function errorHandlerMiddleware(
       error: {
         code: err.code,
         message: err.message,
-        details: err.details ?? [],
-      },
+        details: err.details
+      }
     });
   }
 
-  if (err instanceof Error) {
-    const msg = String(err.message);
-
-    if (msg.includes("UNIQUE constraint failed")) {
-      return res.status(409).json({
-        error: {
-          code: "CONFLICT",
-          message: "Unique constraint violation",
-          details: [],
-        },
-      });
-    }
-
-    if (
-      msg.includes("NOT NULL constraint failed") ||
-      msg.includes("CHECK constraint failed") ||
-      msg.includes("FOREIGN KEY constraint failed")
-    ) {
-      return res.status(400).json({
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Database constraint failed",
-          details: [],
-        },
-      });
-    }
-  }
-
-  console.error(err);
+  console.error("Unhandled error:", err);
 
   return res.status(500).json({
     error: {
       code: "INTERNAL_SERVER_ERROR",
-      message: "Something went wrong",
-      details: [],
-    },
+      message: "Internal server error",
+      details: []
+    }
   });
 }

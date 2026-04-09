@@ -7,3 +7,8 @@ export type PostEntity = {
   userId: number;
   createdAt: string;
 };
+
+export type PostWithAuthorEntity = PostEntity & {
+  userName: string;
+  userEmail: string;
+};

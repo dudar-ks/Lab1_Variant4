@@ -4,7 +4,7 @@ export function requestLoggingMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): void {
   const startedAt = Date.now();
 
   res.on("finish", () => {

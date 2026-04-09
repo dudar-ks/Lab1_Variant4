@@ -1,7 +1,4 @@
-type ValidationError = {
-  field: string;
-  message: string;
-};
+import type { ValidationDetail } from "../errors/ApiError";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -10,8 +7,8 @@ function isValidEmail(email: string): boolean {
 export function validateCreateUserDto(dto: {
   name: string;
   email: string;
-}): ValidationError[] {
-  const errors: ValidationError[] = [];
+}): ValidationDetail[] {
+  const errors: ValidationDetail[] = [];
 
   if (!dto.name || dto.name.trim().length < 2) {
     errors.push({ field: "name", message: "Name must be at least 2 characters" });
@@ -27,7 +24,7 @@ export function validateCreateUserDto(dto: {
 export function validateUpdateUserDto(dto: {
   name: string;
   email: string;
-}): ValidationError[] {
+}): ValidationDetail[] {
   return validateCreateUserDto(dto);
 }
 
@@ -37,15 +34,15 @@ export function validateCreatePostDto(dto: {
   body: string;
   author: string;
   userId: number;
-}): ValidationError[] {
-  const errors: ValidationError[] = [];
+}): ValidationDetail[] {
+  const errors: ValidationDetail[] = [];
 
   if (!dto.title || dto.title.trim().length < 2) {
     errors.push({ field: "title", message: "Title must be at least 2 characters" });
   }
 
   if (!dto.category || dto.category.trim().length < 2) {
-    errors.push({ field: "category", message: "Category is required" });
+    errors.push({ field: "category", message: "Category must be at least 2 characters" });
   }
 
   if (!dto.body || dto.body.trim().length < 3) {
@@ -53,7 +50,7 @@ export function validateCreatePostDto(dto: {
   }
 
   if (!dto.author || dto.author.trim().length < 2) {
-    errors.push({ field: "author", message: "Author is required" });
+    errors.push({ field: "author", message: "Author must be at least 2 characters" });
   }
 
   if (!Number.isInteger(Number(dto.userId)) || Number(dto.userId) <= 0) {
@@ -69,7 +66,7 @@ export function validateUpdatePostDto(dto: {
   body: string;
   author: string;
   userId: number;
-}): ValidationError[] {
+}): ValidationDetail[] {
   return validateCreatePostDto(dto);
 }
 
@@ -77,8 +74,8 @@ export function validateCreateCommentDto(dto: {
   text: string;
   postId: number;
   userId: number;
-}): ValidationError[] {
-  const errors: ValidationError[] = [];
+}): ValidationDetail[] {
+  const errors: ValidationDetail[] = [];
 
   if (!dto.text || dto.text.trim().length < 1) {
     errors.push({ field: "text", message: "Text is required" });
@@ -99,6 +96,6 @@ export function validateUpdateCommentDto(dto: {
   text: string;
   postId: number;
   userId: number;
-}): ValidationError[] {
+}): ValidationDetail[] {
   return validateCreateCommentDto(dto);
 }
