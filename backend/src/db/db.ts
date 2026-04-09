@@ -1,28 +1,42 @@
 import { db } from "./dbClient";
 
-export function all(sql: string): Promise<any[]> {
+export function all<T = unknown>(sql: string): Promise<T[]> {
   return new Promise((resolve, reject) => {
     db.all(sql, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows as T[]);
     });
   });
 }
 
-export function get(sql: string): Promise<any> {
+export function get<T = unknown>(sql: string): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     db.get(sql, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(row as T | undefined);
     });
   });
 }
 
-export function run(sql: string): Promise<{ lastID: number; changes: number }> {
+export function run(
+  sql: string
+): Promise<{ lastID: number; changes: number }> {
   return new Promise((resolve, reject) => {
     db.run(sql, function (err) {
-      if (err) reject(err);
-      else resolve({ lastID: this.lastID, changes: this.changes });
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({
+        lastID: this.lastID,
+        changes: this.changes,
+      });
     });
   });
 }
@@ -30,8 +44,11 @@ export function run(sql: string): Promise<{ lastID: number; changes: number }> {
 export function exec(sql: string): Promise<void> {
   return new Promise((resolve, reject) => {
     db.exec(sql, (err) => {
-      if (err) reject(err);
-      else resolve();
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
     });
   });
 }

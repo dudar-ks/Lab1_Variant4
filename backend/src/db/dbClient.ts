@@ -1,21 +1,19 @@
-import sqlite3 from "sqlite3";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import sqlite3 from "sqlite3";
 
-const dataDir = path.resolve(process.cwd(), "data");
+const dataDir = path.join(process.cwd(), "data");
+const dbPath = path.join(dataDir, "app.db");
 
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, "app.db");
-
 export const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error("SQLite connection error:", err.message);
-  } else {
-    console.log("SQLite connected:", dbPath);
+    process.exit(1);
   }
-});
 
-db.run("PRAGMA foreign_keys = ON");
+  console.log("SQLite connected:", dbPath);
+});
