@@ -1,5 +1,5 @@
 import { all, get, run } from "../db/db";
-import type { PostEntity, PostWithAuthorEntity } from "../types/post.types";
+import type { PostEntity, PostWithAuthorEntity, TopCommentedPostWithTopUsersEnity } from "../types/post.types";
 import { escapeSqlString } from "../utils/sql.ts";
 
 type GetPostsOptions = {
@@ -144,4 +144,60 @@ export async function getPostStats(): Promise<{
       AVG(LENGTH(title)) AS avgTitleLength
     FROM Posts;
   `);
+}
+export async function getTopCommentedPostsWithTopUsers(): Promise<
+  TopCommentedPostWithTopUsersEnity[]
+> {
+  const posts = await all<{
+    postId: number;
+    title: string;
+    totalComments: number;
+  }>(`
+    SELECT
+      p.id AS postId,
+      p.title AS title,
+      COUNT(c.id) AS totalComments
+    FROM Posts p
+    JOIN Comments c ON p.id = c.postId
+    GROUP BY p.id, p.title
+    ORDER BY totalComments DESC, p.id ASC
+    LIMIT 3;
+  `);
+
+  const result: TopCommentedPostWithTopUsersEnity[] = [];
+
+  for (const post of posts) {
+    const userResult = await get<{
+      TopUserId: number;
+      TopUserName: string;
+      TopUserEmail: string;
+      UserCommentsCount: number;
+    }>(`
+      SELECT
+        u.id AS TopUserId,
+        u.name AS TopUserName,
+        u.email AS TopUserEmail,
+        COUNT(c.id) AS UserCommentsCount
+      FROM Comments c
+     JOIN Users u ON c.userId = u.id
+      WHERE c.postId = ${post.postId}
+      GROUP BY u.id, u.name, u.email
+      ORDER BY UserCommentsCount DESC, u.id ASC
+      LIMIT 1;
+    `);
+
+    if (userResult) {
+      result.push({
+        postId: post.postId,
+        title: post.title,
+        totalComments: post.totalComments,
+        TopUserId: userResult.TopUserId,
+        TopUserName: userResult.TopUserName,
+        TopUserEmail: userResult.TopUserEmail,
+        UserCommentsCount: userResult.UserCommentsCount,
+      });
+    }
+  }
+
+  return result;
 }

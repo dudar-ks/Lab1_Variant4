@@ -11,6 +11,7 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const dbPath = path.join(dataDir, "app.db");
+console.log(dbPath)
 
 export const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {

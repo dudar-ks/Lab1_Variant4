@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import * as postService from "../services/post.service";
 import ApiError from "../errors/ApiError";
+import * as postService from "../services/post.service";
 import type {
   CreatePostRequestDto,
   UpdatePostRequestDto
@@ -138,6 +138,18 @@ export async function getPostStats(
   try {
     const stats = await postService.getPostStats();
     return res.status(200).json({ item: stats });
+  } catch (error) {
+    next(error);
+  }
+}
+export async function getTopCommentedPostsWithTopUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const result = await postService.getTopCommentedPostWithTopUsers();
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }

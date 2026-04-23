@@ -12,3 +12,13 @@ export type PostWithAuthorEntity = PostEntity & {
   userName: string;
   userEmail: string;
 };
+
+export type TopCommentedPostWithTopUsersEnity = {
+postId:number;
+title: string;
+totalComments: number;
+TopUserId: number;
+TopUserName: string;
+TopUserEmail:string;
+UserCommentsCount: number;
+}

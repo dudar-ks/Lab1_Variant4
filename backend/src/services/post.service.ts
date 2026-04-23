@@ -147,3 +147,7 @@
         avgTitleLength: Number(stats?.avgTitleLength ?? 0)
       };
     }
+    export async function getTopCommentedPostWithTopUsers () {
+      const items = await postsRepository.getTopCommentedPostsWithTopUsers();
+      return {items, total: items.length};
+    }
