@@ -32,6 +32,7 @@ Seed тестових даних
 Для заповнення бази тестовими записами:
 
 npm run seed
+
 Схема бази даних
 Таблиця Users
 id — INTEGER PRIMARY KEY AUTOINCREMENT
@@ -67,23 +68,29 @@ FOREIGN KEY, CHECK, UNIQUE, NOT NULL;
 seed тестових даних;
 централізована обробка помилок;
 приклади JOIN-запитів.
+
 Приклади HTTP-запитів
 1. Створити користувача
 curl -X POST http://localhost:3000/api/users ^
   -H "Content-Type: application/json" ^
   -d "{\"name\":\"Oksana Dudar\",\"email\":\"oksana@example.com\"}"
+
 2. Отримати список користувачів
 curl http://localhost:3000/api/users
+
 3. Створити пост
 curl -X POST http://localhost:3000/api/posts ^
   -H "Content-Type: application/json" ^
   -d "{\"title\":\"My first post\",\"category\":\"study\",\"body\":\"Hello SQLite world\",\"author\":\"Oksana Dudar\",\"userId\":1}"
+
 4. Отримати список постів з фільтрацією і сортуванням
 curl "http://localhost:3000/api/posts?category=study&sort=createdAt&order=desc"
+
 5. Оновити коментар
 curl -X PUT http://localhost:3000/api/comments/1 ^
   -H "Content-Type: application/json" ^
   -d "{\"text\":\"Updated comment text\",\"postId\":1,\"userId\":2}"
+
 6. Видалити пост
 curl -X DELETE http://localhost:3000/api/posts/1
 Приклад SQL-запиту з WHERE + ORDER + LIMIT
@@ -92,6 +99,7 @@ FROM Posts
 WHERE category = 'study'
 ORDER BY createdAt DESC
 LIMIT 5;
+
 HTTP-коди стану
 200 — успішне отримання або оновлення
 201 — успішне створення
@@ -100,3 +108,9 @@ HTTP-коди стану
 404 — ресурс не знайдено
 409 — конфлікт даних
 500 — внутрішня помилка сервера
+
+### Забезпечення цілісності даних
+
+При видаленні поста автоматично видаляються всі пов’язані коментарі завдяки використанню FOREIGN KEY з ON DELETE CASCADE.
+
+Це дозволяє уникнути розсинхронізації даних між таблицями Posts і Comments та реалізує операцію, яка змінює кілька сутностей одночасно.

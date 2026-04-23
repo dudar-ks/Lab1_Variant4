@@ -151,3 +151,8 @@
       const items = await postsRepository.getTopCommentedPostsWithTopUsers();
       return {items, total: items.length};
     }
+
+export async function getPostsCount() {
+  const count = await postsRepository.countPosts();
+  return count;
+}

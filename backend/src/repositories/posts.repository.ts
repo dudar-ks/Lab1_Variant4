@@ -201,3 +201,8 @@ export async function getTopCommentedPostsWithTopUsers(): Promise<
 
   return result;
 }
+
+export function countPosts() {
+  throw new Error("Function not implemented.");
+}
+

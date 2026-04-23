@@ -154,3 +154,15 @@ export async function getTopCommentedPostsWithTopUsers(
     next(error);
   }
 }
+export async function getPostsCount(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const count = await postService.getPostsCount();
+    return res.status(200).json({ count });
+  } catch (error) {
+    next(error);
+  }
+}
