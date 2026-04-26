@@ -1,10 +1,15 @@
-import { NextFunction, Request, Response } from "express";
-import ApiError from "../errors/ApiError";
+import { Request, Response, NextFunction } from "express";
 
 export function notFoundMiddleware(
-  _req: Request,
-  _res: Response,
+  req: Request,
+  res: Response,
   next: NextFunction
-): void {
-  next(new ApiError(404, "NOT_FOUND", "Route not found"));
+) {
+  return res.status(404).json({
+    error: {
+      code: "NOT_FOUND",
+      message: "Route not found",
+      details: []
+    }
+  });
 }

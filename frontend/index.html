@@ -46,6 +46,8 @@
   <section>
     <h2>Список записів</h2>
 
+    <div id="notice"></div>
+
     <input type="text" id="searchInput" placeholder="Пошук за заголовком">
 
     <select id="filterSelect">
@@ -63,12 +65,12 @@
     <table>
       <thead>
         <tr>
-          <th>№</th>
-          <th>Заголовок</th>
-          <th>Категорія</th>
-          <th>Автор</th>
+          <th data-sort="title">№</th>
+          <th data-sort="title">Заголовок</th>
+          <th data-sort="category">Категорія</th>
+          <th data-sort="author">Автор</th>
           <th>Текст</th>
-          <th>Дата</th>
+          <th data-sort="createdAt">Дата</th>
           <th>Дії</th>
         </tr>
       </thead>
@@ -79,6 +81,7 @@
 
 </div>
 
-<script src="app.js"></script>
+<script type="module" src="./src/main.js"></script>
+
 </body>
 </html>
