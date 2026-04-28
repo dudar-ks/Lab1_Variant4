@@ -26,7 +26,7 @@ export async function getUserById(id: number) {
 }
 
 export async function createUser(dto: CreateUserRequestDto) {
-  const errors = validateCreateUserDto(dto);
+const errors = validateCreateUserDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);
@@ -49,7 +49,7 @@ export async function createUser(dto: CreateUserRequestDto) {
 }
 
 export async function updateUser(id: number, dto: UpdateUserRequestDto) {
-  const errors = validateUpdateUserDto(dto);
+const errors = validateUpdateUserDto(dto);
 
   if (errors.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid request body", errors);

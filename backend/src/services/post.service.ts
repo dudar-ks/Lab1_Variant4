@@ -3,6 +3,7 @@
     import { validateCreatePostDto, validateUpdatePostDto } from "../utils/validators";
     import type { CreatePostRequestDto, UpdatePostRequestDto } from "../dtos/posts.dto";
     import * as postsRepository from "../repositories/posts.repository";
+
     
     type GetPostsOptions = {
       userId?: number;

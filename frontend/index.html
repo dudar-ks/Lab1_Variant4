@@ -1,87 +1,124 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Лабораторна робота №1 – Варіант 4</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Лабораторна робота №4</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:," />
 </head>
 <body>
 
-<h1>Posts</h1>
+<header class="header">
+  <h1>Лабораторна робота №4</h1>
 
-<div class="container">
+  <nav class="navbar">
+    <button class="nav-btn active" data-view="posts">Posts</button>
+    <button class="nav-btn" data-view="users">Users</button>
+    <button class="nav-btn" data-view="comments">Comments</button>
+  </nav>
+</header>
 
-  <section>
-    <h2>Додати запис</h2>
+<main class="container">
 
-    <form id="postsForm">
+  <section class="card">
+    <h2 id="formTitle">Додати пост</h2>
 
-      <label for="titleInput">Заголовок</label>
-      <input type="text" id="titleInput">
-      <div id="titleError" class="error-text"></div>
+    <form id="entityForm">
 
-      <label for="categorySelect">Категорія</label>
-      <select id="categorySelect">
-        <option value="">Оберіть категорію</option>
-        <option value="Новина">Новина</option>
-        <option value="Стаття">Стаття</option>
-        <option value="Оголошення">Оголошення</option>
-      </select>
-      <div id="categoryError" class="error-text"></div>
+      <div id="postFields">
+        <label for="titleInput">Заголовок</label>
+        <input type="text" id="titleInput" />
+        <div id="titleInputError" class="error-text"></div>
 
-      <label for="bodyInput">Текст</label>
-      <textarea id="bodyInput"></textarea>
-      <div id="bodyError" class="error-text"></div>
+        <label for="categorySelect">Категорія</label>
+        <select id="categorySelect">
+          <option value="">Оберіть категорію</option>
+          <option value="news">Новина</option>
+          <option value="tech">Стаття</option>
+          <option value="announcement">Оголошення</option>
+        </select>
+        <div id="categorySelectError" class="error-text"></div>
 
-      <label for="authorInput">Автор</label>
-      <input type="text" id="authorInput">
-      <div id="authorError" class="error-text"></div>
+        <label for="bodyInput">Текст</label>
+        <textarea id="bodyInput"></textarea>
+        <div id="bodyInputError" class="error-text"></div>
 
-      <button type="submit">Додати</button>
+        <label for="authorInput">Автор</label>
+        <input type="text" id="authorInput" />
+        <div id="authorInputError" class="error-text"></div>
+
+        <label for="postUserSelect">Користувач</label>
+        <select id="postUserSelect"></select>
+        <div id="postUserSelectError" class="error-text"></div>
+      </div>
+
+      <div id="userFields" class="hidden">
+        <label for="userNameInput">Ім’я</label>
+        <input type="text" id="userNameInput" />
+        <div id="userNameInputError" class="error-text"></div>
+
+        <label for="userEmailInput">Email</label>
+        <input type="email" id="userEmailInput" />
+        <div id="userEmailInputError" class="error-text"></div>
+      </div>
+
+      <div id="commentFields" class="hidden">
+        <label for="commentTextInput">Коментар</label>
+        <textarea id="commentTextInput"></textarea>
+        <div id="commentTextInputError" class="error-text"></div>
+
+        <label for="commentPostSelect">Пост</label>
+        <select id="commentPostSelect"></select>
+        <div id="commentPostSelectError" class="error-text"></div>
+
+        <label for="commentUserSelect">Користувач</label>
+        <select id="commentUserSelect"></select>
+        <div id="commentUserSelectError" class="error-text"></div>
+      </div>
+
+      <button type="submit" id="submitBtn">Додати</button>
       <button type="button" id="resetBtn">Скасувати</button>
-
     </form>
   </section>
 
-  <section>
-    <h2>Список записів</h2>
+  <section class="card list-card">
+    <h2 id="listTitle">Список постів</h2>
 
     <div id="notice"></div>
+    <div id="listStatus"></div>
 
-    <input type="text" id="searchInput" placeholder="Пошук за заголовком">
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Пошук" />
 
-    <select id="filterSelect">
-      <option value="">Усі категорії</option>
-      <option value="Новина">Новина</option>
-      <option value="Стаття">Стаття</option>
-      <option value="Оголошення">Оголошення</option>
-    </select>
+      <select id="filterSelect">
+        <option value="">Усі категорії</option>
+        <option value="news">Новина</option>
+        <option value="tech">Стаття</option>
+        <option value="announcement">Оголошення</option>
+      </select>
 
-    <select id="sortSelect">
-      <option value="new">Спочатку нові</option>
-      <option value="old">Спочатку старі</option>
-    </select>
+      <select id="sortSelect">
+        <option value="createdAt-desc">Спочатку нові</option>
+        <option value="createdAt-asc">Спочатку старі</option>
+        <option value="title-asc">Назва А-Я</option>
+        <option value="title-desc">Назва Я-А</option>
+        <option value="id-asc">ID зростання</option>
+        <option value="id-desc">ID спадання</option>
+      </select>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th data-sort="title">№</th>
-          <th data-sort="title">Заголовок</th>
-          <th data-sort="category">Категорія</th>
-          <th data-sort="author">Автор</th>
-          <th>Текст</th>
-          <th data-sort="createdAt">Дата</th>
-          <th>Дії</th>
-        </tr>
-      </thead>
-      <tbody id="itemsTableBody"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="itemsTableBody"></tbody>
+      </table>
+    </div>
 
+    <div id="detailsPanel" class="details-panel hidden"></div>
   </section>
 
-</div>
+</main>
 
-<script type="module" src="./src/main.js"></script>
-
+<script type="module" src="./dist/main.js"></script>
 </body>
 </html>

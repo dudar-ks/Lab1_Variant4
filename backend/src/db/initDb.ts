@@ -14,7 +14,7 @@ export async function initDb() {
 
   await run(`
     CREATE TABLE IF NOT EXISTS Posts (
-      id INTEGER PRIMARY KEY AUTOINCREMфENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT
       title TEXT NOT NULL CHECK(length(title) >= 2),
       category TEXT NOT NULL,
       body TEXT NOT NULL CHECK(length(body) >= 3),

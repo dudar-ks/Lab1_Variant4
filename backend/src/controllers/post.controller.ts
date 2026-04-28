@@ -6,25 +6,19 @@ import type {
   UpdatePostRequestDto
 } from "../dtos/posts.dto";
 
-export async function getPosts(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function getPosts(req: Request, res: Response, next: NextFunction) {
   try {
     const userId =
       typeof req.query.userId === "string" ? Number(req.query.userId) : undefined;
 
     const result = await postService.getPosts({
       userId: userId !== undefined && !Number.isNaN(userId) ? userId : undefined,
-      category:
-        typeof req.query.category === "string" ? req.query.category : undefined,
+      category: typeof req.query.category === "string" ? req.query.category : undefined,
       author: typeof req.query.author === "string" ? req.query.author : undefined,
       sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
-      order:
-        req.query.order === "asc" || req.query.order === "desc"
-          ? req.query.order
-          : undefined
+      order: req.query.order === "asc" || req.query.order === "desc"
+        ? req.query.order
+        : undefined
     });
 
     return res.status(200).json(result);
@@ -142,8 +136,9 @@ export async function getPostStats(
     next(error);
   }
 }
+
 export async function getTopCommentedPostsWithTopUsers(
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -154,6 +149,7 @@ export async function getTopCommentedPostsWithTopUsers(
     next(error);
   }
 }
+
 export async function getPostsCount(
   _req: Request,
   res: Response,

@@ -203,7 +203,11 @@
     return result;
   }
 
-  export function countPosts() {
-    throw new Error("Function not implemented.");
-  }
+export async function countPosts(): Promise<number> {
+  const result = await get<{ count: number }>(`
+    SELECT COUNT(*) AS count
+    FROM Posts;
+  `);
 
+  return Number(result?.count ?? 0);
+}
