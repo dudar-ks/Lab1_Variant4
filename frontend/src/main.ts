@@ -11,7 +11,7 @@ import {
   getPostWithAuthor,
   getPosts,
   getUserById,
-  getUsers,
+  getUsers, 
   updateComment,
   updatePost,
   updateUser,
@@ -82,13 +82,20 @@ function init(): void {
   elements.filter.addEventListener("change", loadCurrentView);
   elements.sort.addEventListener("change", loadCurrentView);
 
-  switchView("posts");
+  const savedView = localStorage.getItem("currentView") as ViewName | null;
+
+  if (savedView === "posts" || savedView === "users" || savedView === "comments") {
+    switchView(savedView);
+  } else {
+    switchView("posts");
+  }
 }
 
 async function switchView(view: ViewName): Promise<void> {
   currentView = view;
+  localStorage.setItem("currentView", view);
   editingId = null;
-
+  
   setView(view);
   renderTableHead(view);
   resetForm();

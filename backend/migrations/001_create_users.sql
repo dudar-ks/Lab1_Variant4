@@ -2,5 +2,7 @@ CREATE TABLE IF NOT EXISTS Users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL CHECK(length(name) >= 2),
   email TEXT NOT NULL UNIQUE,
+  passwordHash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user',
   createdAt TEXT NOT NULL
 );

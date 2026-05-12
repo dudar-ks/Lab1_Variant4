@@ -8,13 +8,15 @@ export async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL CHECK(length(name) >= 2),
       email TEXT NOT NULL UNIQUE,
+      passwordHash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
       createdAt TEXT NOT NULL
     );
   `);
 
   await run(`
     CREATE TABLE IF NOT EXISTS Posts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL CHECK(length(title) >= 2),
       category TEXT NOT NULL,
       body TEXT NOT NULL CHECK(length(body) >= 3),

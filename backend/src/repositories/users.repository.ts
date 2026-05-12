@@ -1,6 +1,6 @@
+import bcrypt from "bcryptjs";
 import { all, get, run } from "../db/db";
 import type { UserEntity } from "../types/user.types";
-import { escapeSqlString } from "../utils/sql.ts";
 
 export async function getUsers(params: {
   email?: string;
@@ -15,9 +15,11 @@ export async function getUsers(params: {
   `;
 
   const conditions: string[] = [];
+  const values: (string | number)[] = [];
 
   if (email) {
-    conditions.push(`email = '${escapeSqlString(email)}'`);
+    conditions.push("email LIKE ?");
+    values.push(`%${email}%`);
   }
 
   if (conditions.length > 0) {
@@ -30,24 +32,33 @@ export async function getUsers(params: {
 
   sql += ` ORDER BY ${sortField} ${sortOrder};`;
 
-  return await all<UserEntity>(sql);
+  return await all<UserEntity>(sql, values);
 }
 
 export async function getUserById(id: number): Promise<UserEntity | undefined> {
-  return await get<UserEntity>(`
-    SELECT id, name, email, createdAt
-    FROM Users
-    WHERE id = ${id};
-  `);
+  return await get<UserEntity>(
+    `
+      SELECT id, name, email, createdAt
+      FROM Users
+      WHERE id = ?;
+    `,
+    [id]
+  );
 }
 
-export async function createUser(name: string, email: string): Promise<UserEntity> {
-  const now = new Date().toISOString();
+export async function createUser(
+  name: string,
+  email: string
+): Promise<UserEntity> {
+  const defaultPasswordHash = await bcrypt.hash("password123", 10);
 
-  const result = await run(`
-    INSERT INTO Users (name, email, createdAt)
-    VALUES ('${escapeSqlString(name)}', '${escapeSqlString(email)}', '${now}');
-  `);
+  const result = await run(
+    `
+      INSERT INTO Users (name, email, passwordHash, role, createdAt)
+      VALUES (?, ?, ?, ?, ?);
+    `,
+    [name, email, defaultPasswordHash, "user", new Date().toISOString()]
+  );
 
   const createdUser = await getUserById(result.lastID);
 
@@ -63,11 +74,14 @@ export async function updateUser(
   name: string,
   email: string
 ): Promise<UserEntity | null> {
-  const result = await run(`
-    UPDATE Users
-    SET name = '${escapeSqlString(name)}', email = '${escapeSqlString(email)}'
-    WHERE id = ${id};
-  `);
+  const result = await run(
+    `
+      UPDATE Users
+      SET name = ?, email = ?
+      WHERE id = ?;
+    `,
+    [name, email, id]
+  );
 
   if (result.changes === 0) {
     return null;
@@ -77,6 +91,13 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: number): Promise<boolean> {
-  const result = await run(`DELETE FROM Users WHERE id = ${id};`);
+  const result = await run(
+    `
+      DELETE FROM Users
+      WHERE id = ?;
+    `,
+    [id]
+  );
+
   return result.changes > 0;
 }

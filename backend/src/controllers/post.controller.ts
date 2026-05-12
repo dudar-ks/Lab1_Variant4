@@ -8,17 +8,27 @@ import type {
 
 export async function getPosts(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId =
+    const requestedUserId =
       typeof req.query.userId === "string" ? Number(req.query.userId) : undefined;
 
+    const isAdmin = req.user?.role === "admin";
+
+    const userId =
+      isAdmin
+        ? requestedUserId !== undefined && !Number.isNaN(requestedUserId)
+          ? requestedUserId
+          : undefined
+        : req.user!.id;
+
     const result = await postService.getPosts({
-      userId: userId !== undefined && !Number.isNaN(userId) ? userId : undefined,
+      userId,
       category: typeof req.query.category === "string" ? req.query.category : undefined,
       author: typeof req.query.author === "string" ? req.query.author : undefined,
       sort: typeof req.query.sort === "string" ? req.query.sort : undefined,
-      order: req.query.order === "asc" || req.query.order === "desc"
-        ? req.query.order
-        : undefined
+      order:
+        req.query.order === "asc" || req.query.order === "desc"
+          ? req.query.order
+          : undefined
     });
 
     return res.status(200).json(result);
@@ -41,7 +51,8 @@ export async function getPostById(
       ]);
     }
 
-    const post = await postService.getPostById(id);
+    const post = await postService.getPostByIdForUser(id, req.user!.id);
+
     return res.status(200).json({ item: post });
   } catch (error) {
     next(error);
@@ -54,7 +65,8 @@ export async function createPost(
   next: NextFunction
 ) {
   try {
-    const post = await postService.createPost(req.body);
+    const post = await postService.createPost(req.body, req.user!.id);
+
     return res.status(201).json({ item: post });
   } catch (error) {
     next(error);
@@ -75,7 +87,8 @@ export async function updatePost(
       ]);
     }
 
-    const post = await postService.updatePost(id, req.body);
+    const post = await postService.updatePostForUser(id, req.user!.id, req.body);
+
     return res.status(200).json({ item: post });
   } catch (error) {
     next(error);
@@ -96,7 +109,8 @@ export async function deletePost(
       ]);
     }
 
-    await postService.deletePost(id);
+    await postService.deletePostForUser(id, req.user!.id);
+
     return res.status(204).send();
   } catch (error) {
     next(error);
@@ -117,7 +131,8 @@ export async function getPostWithAuthor(
       ]);
     }
 
-    const post = await postService.getPostWithAuthor(id);
+    const post = await postService.getPostWithAuthorForUser(id, req.user!.id);
+
     return res.status(200).json({ item: post });
   } catch (error) {
     next(error);
@@ -131,6 +146,7 @@ export async function getPostStats(
 ) {
   try {
     const stats = await postService.getPostStats();
+
     return res.status(200).json({ item: stats });
   } catch (error) {
     next(error);
@@ -144,6 +160,7 @@ export async function getTopCommentedPostsWithTopUsers(
 ) {
   try {
     const result = await postService.getTopCommentedPostWithTopUsers();
+
     return res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -157,6 +174,7 @@ export async function getPostsCount(
 ) {
   try {
     const count = await postService.getPostsCount();
+
     return res.status(200).json({ count });
   } catch (error) {
     next(error);

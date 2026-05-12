@@ -118,7 +118,7 @@ export function showLoading(): void {
   elements.notice.innerHTML = "";
   elements.listStatus.className = "status loading";
   elements.listStatus.textContent = "Завантаження...";
-  elements.tableBody.innerHTML = "";
+  elements.tableBody.textContent = "";
   elements.detailsPanel.classList.add("hidden");
 }
 
@@ -130,11 +130,18 @@ export function showSuccess(text = "Дані успішно завантажен
 export function showEmpty(): void {
   elements.listStatus.className = "status empty";
   elements.listStatus.textContent = "Немає даних";
-  elements.tableBody.innerHTML = `
-    <tr>
-      <td colspan="7" class="empty-cell">Нічого не знайдено</td>
-    </tr>
-  `;
+
+  elements.tableBody.textContent = "";
+
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+
+  cell.colSpan = 7;
+  cell.className = "empty-cell";
+  cell.textContent = "Нічого не знайдено";
+
+  row.appendChild(cell);
+  elements.tableBody.appendChild(row);
 }
 
 export function showError(err: ApiError): void {
@@ -160,67 +167,175 @@ export function showNotice(text: string): void {
 }
 
 export function renderPosts(posts: PostDto[]): void {
-  elements.tableBody.innerHTML = "";
+  elements.tableBody.textContent = "";
 
   posts.forEach((post, index) => {
-    elements.tableBody.innerHTML += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${post.id}</td>
-        <td>${escapeHtml(post.title)}</td>
-        <td>${escapeHtml(post.category)}</td>
-        <td>${escapeHtml(post.author)}</td>
-        <td>${formatDate(post.createdAt)}</td>
-        <td class="actions">
-          <button data-action="details" data-id="${post.id}">Деталі</button>
-          <button data-action="edit" data-id="${post.id}">Редагувати</button>
-          <button data-action="delete" data-id="${post.id}" class="danger">Видалити</button>
-        </td>
-      </tr>
-    `;
+    const row = document.createElement("tr");
+
+    const numberCell = document.createElement("td");
+    numberCell.textContent = String(index + 1);
+
+    const idCell = document.createElement("td");
+    idCell.textContent = String(post.id);
+
+    const titleCell = document.createElement("td");
+    titleCell.textContent = post.title;
+
+    const categoryCell = document.createElement("td");
+    categoryCell.textContent = post.category;
+
+    const authorCell = document.createElement("td");
+    authorCell.textContent = post.author;
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = formatDate(post.createdAt);
+
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "actions";
+
+    const detailsButton = document.createElement("button");
+    detailsButton.textContent = "Деталі";
+    detailsButton.dataset.action = "details";
+    detailsButton.dataset.id = String(post.id);
+
+    const editButton = document.createElement("button");
+    editButton.textContent = "Редагувати";
+    editButton.dataset.action = "edit";
+    editButton.dataset.id = String(post.id);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Видалити";
+    deleteButton.dataset.action = "delete";
+    deleteButton.dataset.id = String(post.id);
+    deleteButton.className = "danger";
+
+    actionsCell.append(detailsButton, editButton, deleteButton);
+
+    row.append(
+      numberCell,
+      idCell,
+      titleCell,
+      categoryCell,
+      authorCell,
+      dateCell,
+      actionsCell
+    );
+
+    elements.tableBody.appendChild(row);
   });
 }
 
 export function renderUsers(users: UserDto[]): void {
-  elements.tableBody.innerHTML = "";
+  elements.tableBody.textContent = "";
 
   users.forEach((user, index) => {
-    elements.tableBody.innerHTML += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${user.id}</td>
-        <td>${escapeHtml(user.name)}</td>
-        <td>${escapeHtml(user.email)}</td>
-        <td>${formatDate(user.createdAt)}</td>
-        <td class="actions">
-          <button data-action="details" data-id="${user.id}">Деталі</button>
-          <button data-action="edit" data-id="${user.id}">Редагувати</button>
-          <button data-action="delete" data-id="${user.id}" class="danger">Видалити</button>
-        </td>
-      </tr>
-    `;
+    const row = document.createElement("tr");
+
+    const numberCell = document.createElement("td");
+    numberCell.textContent = String(index + 1);
+
+    const idCell = document.createElement("td");
+    idCell.textContent = String(user.id);
+
+    const nameCell = document.createElement("td");
+    nameCell.textContent = user.name;
+
+    const emailCell = document.createElement("td");
+    emailCell.textContent = user.email;
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = formatDate(user.createdAt);
+
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "actions";
+
+    const detailsButton = document.createElement("button");
+    detailsButton.textContent = "Деталі";
+    detailsButton.dataset.action = "details";
+    detailsButton.dataset.id = String(user.id);
+
+    const editButton = document.createElement("button");
+    editButton.textContent = "Редагувати";
+    editButton.dataset.action = "edit";
+    editButton.dataset.id = String(user.id);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Видалити";
+    deleteButton.dataset.action = "delete";
+    deleteButton.dataset.id = String(user.id);
+    deleteButton.className = "danger";
+
+    actionsCell.append(detailsButton, editButton, deleteButton);
+
+    row.append(
+      numberCell,
+      idCell,
+      nameCell,
+      emailCell,
+      dateCell,
+      actionsCell
+    );
+
+    elements.tableBody.appendChild(row);
   });
 }
 
 export function renderComments(comments: CommentDto[]): void {
-  elements.tableBody.innerHTML = "";
+  elements.tableBody.textContent = "";
 
   comments.forEach((comment, index) => {
-    elements.tableBody.innerHTML += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${comment.id}</td>
-        <td>${escapeHtml(shortText(comment.text, 45))}</td>
-        <td>${comment.postId}</td>
-        <td>${comment.userId}</td>
-        <td>${formatDate(comment.createdAt)}</td>
-        <td class="actions">
-          <button data-action="details" data-id="${comment.id}">Деталі</button>
-          <button data-action="edit" data-id="${comment.id}">Редагувати</button>
-          <button data-action="delete" data-id="${comment.id}" class="danger">Видалити</button>
-        </td>
-      </tr>
-    `;
+    const row = document.createElement("tr");
+
+    const numberCell = document.createElement("td");
+    numberCell.textContent = String(index + 1);
+
+    const idCell = document.createElement("td");
+    idCell.textContent = String(comment.id);
+
+    const textCell = document.createElement("td");
+    textCell.textContent = shortText(comment.text, 45);
+
+    const postIdCell = document.createElement("td");
+    postIdCell.textContent = String(comment.postId);
+
+    const userIdCell = document.createElement("td");
+    userIdCell.textContent = String(comment.userId);
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = formatDate(comment.createdAt);
+
+    const actionsCell = document.createElement("td");
+    actionsCell.className = "actions";
+
+    const detailsButton = document.createElement("button");
+    detailsButton.textContent = "Деталі";
+    detailsButton.dataset.action = "details";
+    detailsButton.dataset.id = String(comment.id);
+
+    const editButton = document.createElement("button");
+    editButton.textContent = "Редагувати";
+    editButton.dataset.action = "edit";
+    editButton.dataset.id = String(comment.id);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Видалити";
+    deleteButton.dataset.action = "delete";
+    deleteButton.dataset.id = String(comment.id);
+    deleteButton.className = "danger";
+
+    actionsCell.append(detailsButton, editButton, deleteButton);
+
+    row.append(
+      numberCell,
+      idCell,
+      textCell,
+      postIdCell,
+      userIdCell,
+      dateCell,
+      actionsCell
+    );
+
+    elements.tableBody.appendChild(row);
   });
 }
 

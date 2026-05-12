@@ -1,4 +1,4 @@
-export type ValidationDetail = {
+export type ApiErrorDetail = {
   field: string;
   message: string;
 };
@@ -6,17 +6,20 @@ export type ValidationDetail = {
 export default class ApiError extends Error {
   status: number;
   code: string;
-  details: ValidationDetail[];
+  details: ApiErrorDetail[];
 
   constructor(
     status: number,
     code: string,
     message: string,
-    details: ValidationDetail[] = []
+    details: ApiErrorDetail[] = []
   ) {
     super(message);
+
     this.status = status;
     this.code = code;
     this.details = details;
+
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }

@@ -26,6 +26,12 @@ async function request<T>(
       ...(options.headers as Record<string, string> | undefined),
     };
 
+    const token = localStorage.getItem("authToken");
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     if (options.body) {
       headers["Content-Type"] = "application/json";
     }
@@ -55,6 +61,7 @@ async function request<T>(
   const rawText = await response.text();
 
   let data: any = null;
+
   try {
     data = rawText ? JSON.parse(rawText) : null;
   } catch {
@@ -73,7 +80,9 @@ async function request<T>(
         "HTTP помилка",
       details:
         backendError?.details && Array.isArray(backendError.details)
-          ? backendError.details.map((e: any) => `${e.field}: ${e.message}`).join("; ")
+          ? backendError.details
+              .map((e: any) => `${e.field}: ${e.message}`)
+              .join("; ")
           : data?.details || data?.detail || rawText,
       errors: backendError?.details || data?.errors || [],
     } satisfies ApiError;
@@ -101,27 +110,66 @@ function buildQuery(params: Record<string, string | number | undefined>): string
   });
 
   const query = searchParams.toString();
+
   return query ? `?${query}` : "";
 }
 
-export async function getPosts(params: {
-  category?: string;
-  author?: string;
-  userId?: number;
-  sort?: string;
-  order?: string;
-} = {}): Promise<PostDto[]> {
-  const response = await request<ListResponse<PostDto>>(`/posts${buildQuery(params)}`);
+export async function login(email: string, password: string): Promise<{
+  token: string;
+  user: UserDto & { role?: "user" | "admin" };
+}> {
+  return await request<{
+    token: string;
+    user: UserDto & { role?: "user" | "admin" };
+  }>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getMe(): Promise<UserDto & { role?: "user" | "admin" }> {
+  return await request<UserDto & { role?: "user" | "admin" }>("/auth/me");
+}
+
+export async function logout(): Promise<{ message: string }> {
+  try {
+    return await request<{ message: string }>("/auth/logout", {
+      method: "POST",
+    });
+  } finally {
+    localStorage.removeItem("authToken");
+  }
+}
+
+export async function getPosts(
+  params: {
+    category?: string;
+    author?: string;
+    userId?: number;
+    sort?: string;
+    order?: string;
+  } = {}
+): Promise<PostDto[]> {
+  const response = await request<ListResponse<PostDto>>(
+    `/posts${buildQuery(params)}`
+  );
+
   return response.items;
 }
 
 export async function getPostById(id: number | string): Promise<PostDto> {
   const response = await request<ItemResponse<PostDto>>(`/posts/${id}`);
+
   return response.item;
 }
 
-export async function getPostWithAuthor(id: number | string): Promise<PostWithAuthorDto> {
-  const response = await request<ItemResponse<PostWithAuthorDto>>(`/posts/${id}/with-author`);
+export async function getPostWithAuthor(
+  id: number | string
+): Promise<PostWithAuthorDto> {
+  const response = await request<ItemResponse<PostWithAuthorDto>>(
+    `/posts/${id}/with-author`
+  );
+
   return response.item;
 }
 
@@ -134,7 +182,10 @@ export async function createPost(dto: CreatePostDto): Promise<PostDto> {
   return response.item;
 }
 
-export async function updatePost(id: number | string, dto: CreatePostDto): Promise<PostDto> {
+export async function updatePost(
+  id: number | string,
+  dto: CreatePostDto
+): Promise<PostDto> {
   const response = await request<ItemResponse<PostDto>>(`/posts/${id}`, {
     method: "PUT",
     body: JSON.stringify(dto),
@@ -144,20 +195,28 @@ export async function updatePost(id: number | string, dto: CreatePostDto): Promi
 }
 
 export async function deletePost(id: number | string): Promise<null> {
-  return request<null>(`/posts/${id}`, { method: "DELETE" });
+  return request<null>(`/posts/${id}`, {
+    method: "DELETE",
+  });
 }
 
-export async function getUsers(params: {
-  email?: string;
-  sort?: string;
-  order?: string;
-} = {}): Promise<UserDto[]> {
-  const response = await request<ListResponse<UserDto>>(`/users${buildQuery(params)}`);
+export async function getUsers(
+  params: {
+    email?: string;
+    sort?: string;
+    order?: string;
+  } = {}
+): Promise<UserDto[]> {
+  const response = await request<ListResponse<UserDto>>(
+    `/users${buildQuery(params)}`
+  );
+
   return response.items;
 }
 
 export async function getUserById(id: number | string): Promise<UserDto> {
   const response = await request<ItemResponse<UserDto>>(`/users/${id}`);
+
   return response.item;
 }
 
@@ -170,7 +229,10 @@ export async function createUser(dto: CreateUserDto): Promise<UserDto> {
   return response.item;
 }
 
-export async function updateUser(id: number | string, dto: CreateUserDto): Promise<UserDto> {
+export async function updateUser(
+  id: number | string,
+  dto: CreateUserDto
+): Promise<UserDto> {
   const response = await request<ItemResponse<UserDto>>(`/users/${id}`, {
     method: "PUT",
     body: JSON.stringify(dto),
@@ -180,25 +242,35 @@ export async function updateUser(id: number | string, dto: CreateUserDto): Promi
 }
 
 export async function deleteUser(id: number | string): Promise<null> {
-  return request<null>(`/users/${id}`, { method: "DELETE" });
+  return request<null>(`/users/${id}`, {
+    method: "DELETE",
+  });
 }
 
-export async function getComments(params: {
-  postId?: number;
-  userId?: number;
-  sort?: string;
-  order?: string;
-} = {}): Promise<CommentDto[]> {
-  const response = await request<ListResponse<CommentDto>>(`/comments${buildQuery(params)}`);
+export async function getComments(
+  params: {
+    postId?: number;
+    userId?: number;
+    sort?: string;
+    order?: string;
+  } = {}
+): Promise<CommentDto[]> {
+  const response = await request<ListResponse<CommentDto>>(
+    `/comments${buildQuery(params)}`
+  );
+
   return response.items;
 }
 
 export async function getCommentById(id: number | string): Promise<CommentDto> {
   const response = await request<ItemResponse<CommentDto>>(`/comments/${id}`);
+
   return response.item;
 }
 
-export async function getCommentsWithUsers(postId: number | string): Promise<CommentWithUserDto[]> {
+export async function getCommentsWithUsers(
+  postId: number | string
+): Promise<CommentWithUserDto[]> {
   const response = await request<ListResponse<CommentWithUserDto>>(
     `/comments/post/${postId}/users`
   );
@@ -228,5 +300,7 @@ export async function updateComment(
 }
 
 export async function deleteComment(id: number | string): Promise<null> {
-  return request<null>(`/comments/${id}`, { method: "DELETE" });
+  return request<null>(`/comments/${id}`, {
+    method: "DELETE",
+  });
 }
