@@ -3,7 +3,7 @@ import type {
   CommentEntity,
   CommentWithUserEntity
 } from "../types/comment.types";
-import { escapeSqlString } from "../utils/sql.ts";
+import { escapeSqlString } from "../utils/sql";
 
 type GetCommentsParams = {
   postId?: number;

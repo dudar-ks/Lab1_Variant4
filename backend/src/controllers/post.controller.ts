@@ -166,3 +166,45 @@ export async function getPostsCount(
     next(error);
   }
 }
+export async function exportPostsWithComments(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) {
+
+  try {
+
+    const result =
+      await postService.exportPostsWithComments();
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+export async function importPostsWithComments(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+
+  try {
+
+    const result =
+      await postService.importPostsWithComments(
+        req.body
+      );
+
+    return res.status(201).json(result);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}

@@ -1,6 +1,6 @@
 import { all, get, run } from "../db/db";
 import type { UserEntity } from "../types/user.types";
-import { escapeSqlString } from "../utils/sql.ts";
+import { escapeSqlString } from "../utils/sql";
 
 export async function getUsers(params: {
   email?: string;

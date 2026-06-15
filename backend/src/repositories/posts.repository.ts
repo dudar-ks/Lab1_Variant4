@@ -1,6 +1,10 @@
 import { all, get, run } from "../db/db";
-import type { PostEntity, PostWithAuthorEntity, TopCommentedPostWithTopUsersEnity } from "../types/post.types";
-import { escapeSqlString } from "../utils/sql.ts";
+import type {
+  PostEntity,
+  PostWithAuthorEntity,
+  TopCommentedPostWithTopUsersEnity
+} from "../types/post.types";
+import { escapeSqlString } from "../utils/sql";
 
 type GetPostsOptions = {
   category?: string;
@@ -13,43 +17,84 @@ type GetPostsOptions = {
 export async function getPosts(
   options: GetPostsOptions = {}
 ): Promise<PostEntity[]> {
+
   let sql = `
-    SELECT id, title, category, body, author, userId, createdAt
+    SELECT
+      id,
+      title,
+      category,
+      body,
+      author,
+      userId,
+      createdAt
     FROM Posts
   `;
 
   const conditions: string[] = [];
 
   if (options.category) {
-    conditions.push(`category = '${escapeSqlString(options.category)}'`);
+    conditions.push(
+      `category = '${escapeSqlString(options.category)}'`
+    );
   }
 
   if (options.author) {
-    conditions.push(`author LIKE '%${escapeSqlString(options.author)}%'`);
+    conditions.push(
+      `author LIKE '%${escapeSqlString(options.author)}%'`
+    );
   }
 
-  if (typeof options.userId === "number" && Number.isFinite(options.userId)) {
-    conditions.push(`userId = ${options.userId}`);
+  if (
+    typeof options.userId === "number" &&
+    Number.isFinite(options.userId)
+  ) {
+    conditions.push(
+      `userId = ${options.userId}`
+    );
   }
 
   if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;
   }
 
-  const allowedSortFields = ["id", "createdAt", "title", "category"];
-  const sortField = allowedSortFields.includes(options.sort || "")
-    ? options.sort
-    : "id";
-  const sortOrder = options.order === "asc" ? "ASC" : "DESC";
+  const allowedSortFields = [
+    "id",
+    "createdAt",
+    "title",
+    "category"
+  ];
 
-  sql += ` ORDER BY ${sortField} ${sortOrder} LIMIT 100;`;
+  const sortField =
+    allowedSortFields.includes(options.sort || "")
+      ? options.sort
+      : "id";
+
+  const sortOrder =
+    options.order === "asc"
+      ? "ASC"
+      : "DESC";
+
+  sql += `
+    ORDER BY ${sortField} ${sortOrder}
+    LIMIT 100;
+  `;
 
   return await all<PostEntity>(sql);
 }
 
-export async function getPostById(id: number): Promise<PostEntity | undefined> {
+export async function getPostById(
+  id: number
+): Promise<PostEntity | undefined> {
+
   return await get<PostEntity>(`
-    SELECT id, title, category, body, author, userId, createdAt
+    SELECT
+      id,
+      title,
+      category,
+      body,
+      author,
+      userId,
+      createdAt
     FROM Posts
     WHERE id = ${id};
   `);
@@ -62,9 +107,20 @@ export async function createPost(
   author: string,
   userId: number
 ): Promise<PostEntity> {
+
   const result = await run(`
-    INSERT INTO Posts (title, category, body, author, userId, createdAt)
-    VALUES (
+    INSERT INTO Posts
+    (
+      title,
+      category,
+      body,
+      author,
+      userId,
+      createdAt
+    )
+
+    VALUES
+    (
       '${escapeSqlString(title)}',
       '${escapeSqlString(category)}',
       '${escapeSqlString(body)}',
@@ -74,10 +130,14 @@ export async function createPost(
     );
   `);
 
-  const createdPost = await getPostById(result.lastID);
+  const createdPost = await getPostById(
+    result.lastID
+  );
 
   if (!createdPost) {
-    throw new Error("Failed to fetch created post");
+    throw new Error(
+      "Failed to fetch created post"
+    );
   }
 
   return createdPost;
@@ -91,9 +151,12 @@ export async function updatePost(
   author: string,
   userId: number
 ): Promise<PostEntity | null> {
+
   const result = await run(`
     UPDATE Posts
+
     SET
+
       title = '${escapeSqlString(title)}',
       category = '${escapeSqlString(category)}',
       body = '${escapeSqlString(body)}',
@@ -109,15 +172,24 @@ export async function updatePost(
   return (await getPostById(id)) ?? null;
 }
 
-export async function deletePost(id: number): Promise<boolean> {
-  const result = await run(`DELETE FROM Posts WHERE id = ${id};`);
+export async function deletePost(
+  id: number
+): Promise<boolean> {
+
+  const result = await run(`
+    DELETE FROM Posts
+    WHERE id = ${id};
+  `);
+
   return result.changes > 0;
 }
 
 export async function getPostWithAuthor(
   id: number
 ): Promise<PostWithAuthorEntity | undefined> {
+
   return await get<PostWithAuthorEntity>(`
+
     SELECT
       p.id,
       p.title,
@@ -129,7 +201,8 @@ export async function getPostWithAuthor(
       u.name AS userName,
       u.email AS userEmail
     FROM Posts p
-    JOIN Users u ON p.userId = u.id
+    JOIN Users u
+      ON p.userId = u.id
     WHERE p.id = ${id};
   `);
 }
@@ -138,13 +211,18 @@ export async function getPostStats(): Promise<{
   totalPosts: number;
   avgTitleLength: number;
 } | undefined> {
+
   return await get(`
     SELECT
       COUNT(*) AS totalPosts,
-      AVG(LENGTH(title)) AS avgTitleLength
+      AVG(
+        LENGTH(title)
+      ) AS avgTitleLength
+
     FROM Posts;
   `);
 }
+
 export async function getTopCommentedPostsWithTopUsers(): Promise<
   TopCommentedPostWithTopUsersEnity[]
 > {
@@ -152,57 +230,217 @@ export async function getTopCommentedPostsWithTopUsers(): Promise<
     postId: number;
     title: string;
     totalComments: number;
+
   }>(`
+
     SELECT
       p.id AS postId,
       p.title AS title,
       COUNT(c.id) AS totalComments
     FROM Posts p
-    JOIN Comments c ON p.id = c.postId
-    GROUP BY p.id, p.title
-    ORDER BY totalComments DESC, p.id ASC
+    JOIN Comments c
+      ON p.id = c.postId
+    GROUP BY
+      p.id,
+      p.title
+    ORDER BY
+      totalComments DESC,
+      p.id ASC
     LIMIT 3;
   `);
 
-  const result: TopCommentedPostWithTopUsersEnity[] = [];
+  const result:
+    TopCommentedPostWithTopUsersEnity[] = [];
 
   for (const post of posts) {
+
     const userResult = await get<{
+
       TopUserId: number;
       TopUserName: string;
       TopUserEmail: string;
       UserCommentsCount: number;
+
     }>(`
+
       SELECT
         u.id AS TopUserId,
         u.name AS TopUserName,
         u.email AS TopUserEmail,
-        COUNT(c.id) AS UserCommentsCount
+        COUNT(c.id)
+        AS UserCommentsCount
       FROM Comments c
-     JOIN Users u ON c.userId = u.id
+      JOIN Users u
+        ON c.userId = u.id
       WHERE c.postId = ${post.postId}
-      GROUP BY u.id, u.name, u.email
-      ORDER BY UserCommentsCount DESC, u.id ASC
+      GROUP BY
+        u.id,
+        u.name,
+        u.email
+      ORDER BY
+        UserCommentsCount DESC,
+        u.id ASC
       LIMIT 1;
     `);
 
     if (userResult) {
+
       result.push({
+
         postId: post.postId,
         title: post.title,
-        totalComments: post.totalComments,
-        TopUserId: userResult.TopUserId,
-        TopUserName: userResult.TopUserName,
-        TopUserEmail: userResult.TopUserEmail,
-        UserCommentsCount: userResult.UserCommentsCount,
+        totalComments:
+          post.totalComments,
+
+        TopUserId:
+          userResult.TopUserId,
+
+        TopUserName:
+          userResult.TopUserName,
+
+        TopUserEmail:
+          userResult.TopUserEmail,
+
+        UserCommentsCount:
+          userResult.UserCommentsCount
+
       });
+
     }
+
   }
 
   return result;
 }
 
-export function countPosts() {
-  throw new Error("Function not implemented.");
+export async function countPosts(): Promise<number> {
+
+  const result = await get<{
+    count: number;
+  }>(`
+
+    SELECT
+      COUNT(*) AS count
+    FROM Posts;
+
+  `);
+
+  return result?.count ?? 0;
 }
 
+/* ========================= */
+/* BONUS: EXPORT / IMPORT    */
+/* ========================= */
+
+export async function exportPostsWithComments() {
+
+  const posts = await all<{
+    id: number;
+    title: string;
+    category: string;
+    body: string;
+    author: string;
+    userId: number;
+    createdAt: string;
+  }>(`
+
+    SELECT
+      id,
+      title,
+      category,
+      body,
+      author,
+      userId,
+      createdAt
+    FROM Posts
+    ORDER BY id;
+  `);
+
+  const result: any[] = [];
+
+  for (const post of posts) {
+    const comments = await all<{
+      id: number;
+      text: string;
+      userId: number;
+      createdAt: string;
+
+    }>(`
+
+      SELECT
+        id,
+        text,
+        userId,
+        createdAt
+      FROM Comments
+      WHERE postId = ${post.id}
+      ORDER BY id;
+
+    `);
+
+    result.push({
+
+      ...post,
+
+      comments
+
+    });
+
+  }
+
+  return result;
+}
+
+export async function importPostsWithComments(
+  posts: any[]
+): Promise<void> {
+
+  for (const post of posts) {
+
+    const createdPost =
+      await createPost(
+        post.title,
+        post.category,
+        post.body,
+        post.author,
+        post.userId
+
+      );
+
+    if (
+      Array.isArray(
+        post.comments
+      )
+    ) {
+
+      for (
+        const comment
+        of post.comments
+      ) {
+
+        await run(`
+
+          INSERT INTO Comments
+          (
+            text,
+            postId,
+            userId,
+            createdAt
+          )
+          VALUES
+          (
+            '${escapeSqlString(comment.text)}',
+            ${createdPost.id},
+            ${comment.userId},
+            '${new Date().toISOString()}'
+          );
+
+        `);
+
+      }
+
+    }
+
+  }
+
+}

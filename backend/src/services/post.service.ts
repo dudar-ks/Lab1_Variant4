@@ -156,3 +156,54 @@ export async function getPostsCount() {
   const count = await postsRepository.countPosts();
   return count;
 }
+export async function exportPostsWithComments() {
+  const data = await postsRepository.exportPostsWithComments();
+
+  return {
+    items: data,
+    total: data.length
+  };
+}
+export async function importPostsWithComments(
+  posts: unknown
+) {
+
+  if (!Array.isArray(posts)) {
+    throw new ApiError(
+      400,
+      "VALIDATION_ERROR",
+      "Body must be an array"
+    );
+  }
+
+  if (posts.length > 50) {
+    throw new ApiError(
+      400,
+      "VALIDATION_ERROR",
+      "Maximum 50 posts"
+    );
+  }
+
+  for (const post of posts) {
+
+    if (
+      !post ||
+      typeof post !== "object" ||
+      !("title" in post)
+    ) {
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Invalid post structure"
+      );
+    }
+  }
+
+  await postsRepository.importPostsWithComments(
+    posts as any[]
+  );
+
+  return {
+    message: "Import successful"
+  };
+}
